@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gift Discovery Form | ThoughtfulGifts</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="brand"><a href="index.html">Thoughtful<span>Gifts</span></a></div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="form.html" class="active">Find a Gift</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="form-container card">
+      <div class="form-header">
+        <h2>Tell Us Who You're Celebrating</h2>
+        <p>We'll match your answers against non-traditional, effort-driven gifts within your budget.</p>
+      </div>
+
+      <form id="gift-search-form" onsubmit="handleFormSubmission(event)">
+
+        <!-- Section 1: Recipient Profile -->
+        <h4 class="form-section-title">1. Recipient Details</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="occasion">Occasion *</label>
+            <select id="occasion" required>
+              <option value="">Select occasion</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Anniversary">Anniversary</option>
+              <option value="Milestone Celebration">Milestone Celebration</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="relationship">Relationship *</label>
+            <select id="relationship" required>
+              <option value="">Select relationship</option>
+              <option value="Spouse / Partner">Spouse / Partner</option>
+              <option value="Parent / In-law">Parent / In-law</option>
+              <option value="Sibling">Sibling</option>
+              <option value="Close Friend">Close Friend</option>
+              <option value="Colleague / Mentor">Colleague / Mentor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="recipient-name">Recipient's Name / Nickname *</label>
+            <input type="text" id="recipient-name" placeholder="e.g. Rahul or Priya" required />
+          </div>
+
+          <div class="form-group">
+            <label for="age-bracket">Age Bracket</label>
+            <select id="age-bracket">
+              <option value="18 - 25">18 - 25</option>
+              <option value="26 - 40" selected>26 - 40</option>
+              <option value="41 - 60">41 - 60</option>
+              <option value="60+">60+</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="interests">Interests, Passions & Quirks *</label>
+          <textarea id="interests" rows="2" placeholder="e.g. Loves gardening, mechanical keyboards, specialty tea, trekking..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="avoid">What to AVOID (Things they already own or dislike) *</label>
+          <textarea id="avoid" rows="2" placeholder="e.g. Already has lots of wallets, mugs, generic chocolates, and photo albums." required></textarea>
+        </div>
+
+        <!-- Section 2: Budget -->
+        <h4 class="form-section-title">2. Budget Range</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="min-budget">Min Budget (₹ / Currency)</label>
+            <input type="number" id="min-budget" placeholder="1000" min="0" />
+          </div>
+
+          <div class="form-group">
+            <label for="max-budget">Max Budget (₹ / Currency) *</label>
+            <input type="number" id="max-budget" placeholder="5000" min="100" required />
+          </div>
+        </div>
+
+        <!-- Section 3: Buyer Details -->
+        <h4 class="form-section-title">3. Your Information (For Future Retrieval)</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="user-name">Your Name *</label>
+            <input type="text" id="user-name" placeholder="e.g. Krishan" required />
+          </div>
+
+          <div class="form-group">
+            <label for="user-contact">Your Email or Mobile Number *</label>
+            <input type="text" id="user-contact" placeholder="e.g. name@example.com or 9876543210" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gradient btn-block">
+          Generate Form Code & Get Unique Gifts &rarr;
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 ThoughtfulGifts.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

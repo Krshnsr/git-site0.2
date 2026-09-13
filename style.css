@@ -1,0 +1,499 @@
+/* ==========================================================================
+   Design Tokens & Dark Mode Palette
+   ========================================================================== */
+:root {
+  --bg-main: #0b0f19;
+  --bg-card: #131b2e;
+  --bg-card-hover: #1a243d;
+  --border-color: #23314f;
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  --gradient-primary: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
+  --gradient-accent: linear-gradient(135deg, #f59e0b, #ec4899);
+  --gradient-glow: rgba(139, 92, 246, 0.35);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Navbar & Layout
+   ========================================================================== */
+.navbar {
+  background: rgba(19, 27, 46, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand, .brand a {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brand span {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-left: 1.25rem;
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover, .nav-links a.active {
+  color: #fff;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+  flex: 1;
+  width: 100%;
+}
+
+/* ==========================================================================
+   Cards & UI Components
+   ========================================================================== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.btn-gradient {
+  background: var(--gradient-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 18px var(--gradient-glow);
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.btn-outline:hover {
+  background: var(--bg-card-hover);
+  border-color: #3b82f6;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ==========================================================================
+   Hero Section
+   ========================================================================== */
+.hero {
+  text-align: center;
+  padding: 3rem 0 2rem;
+}
+
+.badge-tag {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #c084fc;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.hero h1 span {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  max-width: 650px;
+  margin: 0 auto 1.75rem;
+}
+
+/* ==========================================================================
+   Code Lookup Box
+   ========================================================================== */
+.lookup-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  background: linear-gradient(180deg, #131b2e 0%, #0e1526 100%);
+}
+
+.lookup-text h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.25rem;
+}
+
+.lookup-text p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.lookup-form {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+/* ==========================================================================
+   Creative Framed Promotion
+   ========================================================================== */
+.promo-section {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2.5rem;
+  align-items: center;
+  margin: 3.5rem 0;
+}
+
+.creative-frame {
+  position: relative;
+  padding: 6px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 35px -8px var(--gradient-glow);
+  transform: rotate(-1deg);
+  transition: transform 0.3s ease;
+}
+
+.creative-frame:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+
+.frame-inner {
+  position: relative;
+  border-radius: calc(var(--radius-lg) - 6px);
+  overflow: hidden;
+  background: #000;
+}
+
+.promo-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.promo-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+
+.promo-tag {
+  color: #38bdf8;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.promo-details h2 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  margin: 0.5rem 0 1rem;
+}
+
+.promo-details p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   Information Grid (Who We Are / How We Work)
+   ========================================================================== */
+.grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.info-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: #38bdf8;
+}
+
+.steps-list {
+  list-style: none;
+}
+
+.steps-list li {
+  margin-bottom: 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.steps-list strong {
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   Form Styles
+   ========================================================================== */
+.form-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.form-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.form-section-title {
+  font-size: 1.1rem;
+  color: #c084fc;
+  margin: 1.75rem 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #0b1120;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+}
+
+/* ==========================================================================
+   Results Page & Recommendation Cards
+   ========================================================================== */
+.code-banner {
+  text-align: center;
+  background: linear-gradient(180deg, #131b2e 0%, #0d1527 100%);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  margin-bottom: 2.5rem;
+}
+
+.code-pill {
+  display: inline-block;
+  margin: 0.75rem 0;
+  padding: 0.5rem 1.5rem;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  box-shadow: 0 4px 20px var(--gradient-glow);
+}
+
+.meta-summary {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.gift-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.gift-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gift-category {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.gift-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.gift-price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.thoughtful-highlight {
+  background: rgba(236, 72, 153, 0.1);
+  border-left: 4px solid #ec4899;
+  padding: 0.75rem 1rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.95rem;
+  color: #fbcfe8;
+}
+
+.buy-action {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.results-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-top: 3rem;
+}
+
+/* ==========================================================================
+   Mobile Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+  .promo-section {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .lookup-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .lookup-form {
+    flex-direction: column;
+  }
+}

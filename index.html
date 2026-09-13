@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ThoughtfulGifts | Meaningful Birthday & Anniversary Gifting</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header class="navbar">
+    <div class="brand">Thoughtful<span>Gifts</span></div>
+    <nav class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="form.html">Find a Gift</a>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="badge-tag">No More Duplicate Gifts</div>
+      <h1>Gifts That Show <span>Real Effort</span> & Thought</h1>
+      <p>
+        Tired of generic mugs, repetitive perfumes, and unwanted gift boxes? We help you discover unique, memorable birthday and anniversary gifts within your exact budget.
+      </p>
+      <div class="hero-actions">
+        <a href="form.html" class="btn btn-gradient">Find a Unique Gift &rarr;</a>
+      </div>
+    </section>
+
+    <!-- Retrieve Old Form Code Box -->
+    <section class="card lookup-box">
+      <div class="lookup-text">
+        <h3>Retrieve Your Saved Recommendations</h3>
+        <p>Already created a gift search? Enter your Form Reference Code below to load your suggestions.</p>
+      </div>
+      <form class="lookup-form" onsubmit="lookupCode(event)">
+        <input type="text" id="home-code-input" placeholder="e.g. GIFT-72940" required />
+        <button type="submit" class="btn btn-outline">Check Code</button>
+      </form>
+    </section>
+
+    <!-- Special Promotion with Creative Photo Frame -->
+    <section class="promo-section">
+      <div class="promo-frame-wrapper">
+        <div class="creative-frame">
+          <div class="frame-inner">
+            <img 
+              src="https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=900&q=80" 
+              alt="Handcrafted curated gift showcase" 
+              class="promo-img"
+              loading="lazy"
+            />
+            <div class="promo-badge">Limited Spotlight</div>
+          </div>
+        </div>
+      </div>
+      <div class="promo-details">
+        <span class="promo-tag">Anniversary & Birthday Exclusive</span>
+        <h2>Handcrafted Keepsakes & Artisanal Experiences</h2>
+        <p>
+          Show someone how much they mean to you. This month, get curated access to independent craftspersons and customized memory keepsakes designed to never be forgotten.
+        </p>
+        <a href="form.html" class="btn btn-gradient">Start Personalized Search</a>
+      </div>
+    </section>
+
+    <!-- Who We Are & How We Work -->
+    <section class="grid-two">
+      <div class="card info-card">
+        <h3>Who We Are</h3>
+        <p>
+          We are a curated gifting service built to solve a universal dilemma: recipients regularly receive repetitive, impersonal, or unwanted gifts on milestone birthdays and anniversaries. 
+        </p>
+        <p>
+          Our platform guides you away from standard retail clichés by focusing on the recipient's lifestyle, habits, and what they already own.
+        </p>
+      </div>
+
+      <div class="card info-card">
+        <h3>How We Work</h3>
+        <ol class="steps-list">
+          <li><strong>1. Share Details & Budget:</strong> Complete our short form with their passions and items to avoid.</li>
+          <li><strong>2. Get a Reference Code:</strong> A private code is generated so you can revisit your list anytime.</li>
+          <li><strong>3. Buy Directly:</strong> Explore tailored suggestions with verified availability and direct purchase links.</li>
+        </ol>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 ThoughtfulGifts. Designed for memorable occasions.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

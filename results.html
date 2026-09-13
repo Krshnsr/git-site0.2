@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Recommendations | ThoughtfulGifts</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="brand"><a href="index.html">Thoughtful<span>Gifts</span></a></div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="form.html">New Search</a>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- Form Code Display Banner -->
+    <section class="card code-banner">
+      <p>Save your unique Form Reference Code to check or update this list anytime from the Home page:</p>
+      <div class="code-pill" id="result-code">GIFT-XXXXX</div>
+      <div class="meta-summary" id="result-meta">Loading details...</div>
+    </section>
+
+    <!-- Suggestions List -->
+    <section>
+      <h2 style="margin-bottom: 1rem;">Curated Unique Suggestions</h2>
+      <div id="cards-container" class="results-grid">
+        <!-- Injected via app.js -->
+      </div>
+    </section>
+
+    <div class="results-footer-actions">
+      <a href="index.html" class="btn btn-outline">&larr; Back to Home</a>
+      <a href="form.html" class="btn btn-gradient">Create Another Search</a>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 ThoughtfulGifts.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
