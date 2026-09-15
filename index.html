@@ -4,98 +4,438 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ThoughtfulGifts | Meaningful Birthday & Anniversary Gifting</title>
-  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    /* Reset & Core Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      width: 100%;
+      min-height: 100%;
+      background-color: #05070a; /* Deep cinematic dark background */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    /* Cinematic Layers */
+    #fogCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none; /* Allows user clicks to pass through to buttons */
+      mix-blend-mode: screen; /* Smoothly blends misty smoke with lighting gradients */
+      opacity: 0.55;
+    }
+
+    .spotlight {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      background: radial-gradient(circle at 50% 35%, transparent 20%, rgba(5, 7, 10, 0.92) 80%);
+      pointer-events: none;
+    }
+
+    /* App Container Layout */
+    .container {
+      position: relative;
+      z-index: 3; /* Positions text and interactables above canvas fog */
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    .navbar {
+      position: relative;
+      z-index: 4;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0;
+    }
+
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .brand span {
+      color: #ff6b81;
+    }
+
+    .nav-links a {
+      color: #94a3b8;
+      text-decoration: none;
+      margin-left: 24px;
+      font-size: 0.95rem;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: #fff;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px 0;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .badge-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(255, 107, 129, 0.15);
+      color: #ff6b81;
+      border: 1px solid rgba(255, 107, 129, 0.3);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 300;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 24px;
+      animation: movieFadeIn 2.5s ease-out;
+    }
+
+    .hero h1 span {
+      font-weight: 700;
+      color: #ff6b81;
+      text-shadow: 0 0 30px rgba(255, 107, 129, 0.3);
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, #ff6b81, #ff4757);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(255, 107, 129, 0.4);
+    }
+
+    .btn-gradient:hover {
+      box-shadow: 0 6px 24px rgba(255, 107, 129, 0.6);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Cards Setup */
+    .card {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 32px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Lookup Block */
+    .lookup-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      margin-bottom: 80px;
+    }
+
+    .lookup-text h3 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .lookup-text p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    .lookup-form {
+      display: flex;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .lookup-form input {
+      background: rgba(5, 7, 10, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 14px 20px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      min-width: 240px;
+      transition: border-color 0.3s ease;
+    }
+
+    .lookup-form input:focus {
+      border-color: #ff6b81;
+    }
+
+    /* Promotion Feature Area */
+    .promo-section {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      margin-bottom: 80px;
+    }
+
+    .promo-frame-wrapper {
+      flex: 1;
+    }
+
+    .creative-frame {
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+      padding: 16px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .frame-inner {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .promo-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: grayscale(20%) contrast(110%);
+      transition: transform 0.5s ease;
+    }
+
+    .creative-frame:hover .promo-img {
+      transform: scale(1.03);
+    }
+
+    .promo-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(5, 7, 10, 0.85);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #ff6b81;
+      border: 1px solid rgba(255, 107, 129, 0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    .promo-details {
+      flex: 1;
+    }
+
+    .promo-tag {
+      color: #ff6b81;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .promo-details h2 {
+      font-size: 2.2rem;
+      line-height: 1.3;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .promo-details p {
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    /* Grid Sections */
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 100px;
+    }
+
+    .info-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .info-card p {
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .info-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .steps-list {
+      list-style: none;
+    }
+
+    .steps-list li {
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .steps-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .steps-list strong {
+      color: #fff;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Footer Setup */
+    .footer {
+      position: relative;
+      z-index: 3;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .footer p {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    /* Cinematic Opening Text Animation */
+    @keyframes movieFadeIn {
+      from { 
+        opacity: 0; 
+        filter: blur(12px); 
+        transform: scale(0.96);
+      }
+      to { 
+        opacity: 1; 
+        filter: blur(0); 
+        transform: scale(1);
+      }
+    }
+
+    /* Basic Responsive Adjustments */
+    @media (max-width: 968px) {
+      .lookup-box, .promo-section, .grid-two {
+        flex-direction: column;
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .lookup-form {
+        width: 100%;
+      }
+      .lookup-form input {
+        flex-grow: 1;
+      }
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Navigation -->
-  <header class="navbar">
-    <div class="brand">Thoughtful<span>Gifts</span></div>
-    <nav class="nav-links">
-      <a href="index.html" class="active">Home</a>
-      <a href="form.html">Find a Gift</a>
-    </nav>
-  </header>
+  <!-- Dynamic Cinematic Elements Behind UI Layers -->
+  <canvas id="fogCanvas"></canvas>
+  <div class="spotlight"></div>
 
-  <main class="container">
+  <div class="container">
+    <!-- Navigation -->
+    <header class="navbar">
+      <div class="brand">Thoughtful<span>Gifts</span></div>
+      <nav class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="form.html">Find a Gift</a>
+      </nav>
+    </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="badge-tag">No More Duplicate Gifts</div>
-      <h1>Gifts That Show <span>Real Effort</span> & Thought</h1>
-      <p>
-        Tired of generic mugs, repetitive perfumes, and unwanted gift boxes? We help you discover unique, memorable birthday and anniversary gifts within your exact budget.
-      </p>
-      <div class="hero-actions">
-        <a href="form.html" class="btn btn-gradient">Find a Unique Gift &rarr;</a>
-      </div>
-    </section>
-
-    <!-- Retrieve Old Form Code Box -->
-    <section class="card lookup-box">
-      <div class="lookup-text">
-        <h3>Retrieve Your Saved Recommendations</h3>
-        <p>Already created a gift search? Enter your Form Reference Code below to load your suggestions.</p>
-      </div>
-      <form class="lookup-form" onsubmit="lookupCode(event)">
-        <input type="text" id="home-code-input" placeholder="e.g. GIFT-72940" required />
-        <button type="submit" class="btn btn-outline">Check Code</button>
-      </form>
-    </section>
-
-    <!-- Special Promotion with Creative Photo Frame -->
-    <section class="promo-section">
-      <div class="promo-frame-wrapper">
-        <div class="creative-frame">
-          <div class="frame-inner">
-            <img 
-              src="https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=900&q=80" 
-              alt="Handcrafted curated gift showcase" 
-              class="promo-img"
-              loading="lazy"
-            />
-            <div class="promo-badge">Limited Spotlight</div>
-          </div>
+    <main>
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="badge-tag">No More Duplicate Gifts</div>
+        <h1>Gifts That Show <span>Real Effort</span> & Thought</h1>
+        <p>
+          Tired of generic mugs, repetitive perfumes, and unwanted gift boxes? We help you discover unique, memorable birthday and anniversary gifts within your exact budget.
+        </p>
+        <div class="hero-actions">
+          <a href="form.html" class="btn btn-gradient">Find a Unique Gift &rarr;</a>
         </div>
-      </div>
-      <div class="promo-details">
-        <span class="promo-tag">Anniversary & Birthday Exclusive</span>
-        <h2>Handcrafted Keepsakes & Artisanal Experiences</h2>
-        <p>
-          Show someone how much they mean to you. This month, get curated access to independent craftspersons and customized memory keepsakes designed to never be forgotten.
-        </p>
-        <a href="form.html" class="btn btn-gradient">Start Personalized Search</a>
-      </div>
-    </section>
+      </section>
 
-    <!-- Who We Are & How We Work -->
-    <section class="grid-two">
-      <div class="card info-card">
-        <h3>Who We Are</h3>
-        <p>
-          We are a  Pune, India based team for curated gifting service built to solve a universal dilemma: recipients regularly receive repetitive, impersonal, or unwanted gifts on milestone birthdays and anniversaries. Presently we are only at this city only in future we will be availabe near you too. 
-        </p>
-        <p>
-          Our platform guides you away from standard retail clichés by focusing on the recipient's lifestyle, habits, and what they already own.
-        </p>
-      </div>
+      <!-- Retrieve Old Form Code Box -->
+      <section class="card lookup-box">
+        <div class="lookup-text">
+          <h3>Retrieve Your Saved Recommendations</h3>
+          <p>Already created a gift search? Enter your Form Reference Code below to load your suggestions.</p>
+        </div>
+        <form class="lookup-form" onsubmit="lookupCode(event)">
+          <input type="text" id="home-code-input" placeholder="e.g. GIFT-72940" required />
+          <button type="submit" class="btn btn-outline">Check Code</button>
+        </form>
+      </section>
 
-      <div class="card info-card">
-        <h3>How We Work</h3>
-        <ol class="steps-list">
-          <li><strong>1. Share Details & Budget:</strong> Complete our short form with their passions and items to avoid.</li>
-          <li><strong>2. Get a Reference Code:</strong> A private code is generated so you can revisit your list anytime.</li>
-          <li><strong>3. Buy Directly:</strong> Explore tailored suggestions with verified availability and direct purchase links.</li>
-        </ol>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <p>&copy; 2026 ThoughtfulGifts. Designed for memorable occasions.</p>
-  </footer>
-
-  <script src="app.js"></script>
-</body>
-</html>
+      <!-- Special Promotion with Creative Photo Frame -->
+      <section class="promo-section">
+        <div class="promo-frame-wrapper">
+          <div class="creative-frame">
+            <div class="frame-inner">
+              <img 
