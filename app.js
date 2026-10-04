@@ -39,8 +39,27 @@ function handleFormSubmission(event) {
     suggestions: suggestions
   };
 
-  // Save to localStorage
+  // 1. Save to localStorage (Aapke local backup ke liye)
   localStorage.setItem(code, JSON.stringify(submissionData));
+
+  // 2. Google Sheet par data bhejne ke liye Web App URL
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzBLh897sQvwu7SNqSOifqqO13mMlqnqfue5_l1ZEoWxOPCnChDNN6dD8fqEhUdhPbZ/exec';
+
+  // 3. Fetch API ke zariye Google Sheet Database mein POST request bhejna
+  fetch(WEB_APP_URL, {
+    method: 'POST', // Yeh HTTP method specify karta hai ki hum data bhej rahe hain
+    headers: {
+      'Content-Type': 'application/json' // Server ko inform karta hai ki data JSON format mein hai
+    },
+    body: JSON.stringify(submissionData) // Pura form data object JSON string mein convert karke bhej rahe hain
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Sheet Success:', data);
+  })
+  .catch((error) => {
+    console.error('Sheet Error:', error);
+  });
 
   // Redirect to Results Page with Code in Query String
   window.location.href = `results.html?code=${code}`;
