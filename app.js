@@ -5,6 +5,37 @@ function generateReferenceCode() {
   const num = Math.floor(10000 + Math.random() * 90000);
   return `GIFT-${num}`;
 }
+const form = document.querySelector('#giftForm');
+const SCRIPT_URL = 'YOUR_COPIED_APPS_SCRIPT_WEB_APP_URL';
+
+form.addEventListener('submit', function (e) {
+  e.preventDefault(); // पेज को तुरंत रीलोड होने से रोकें
+
+  const payload = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    budget: document.getElementById('budget').value,
+    occasion: document.getElementById('occasion').value,
+    interests: document.getElementById('interests').value
+  };
+
+  // Google Apps Script को डेटा भेजने के लिए:
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors', // CORS ब्लॉक से बचने के लिए जरूरी
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    alert('डेटा सफलतापूर्वक सेव हो गया!');
+    form.reset();
+  })
+  .catch(error => {
+    console.error('Error submitting form:', error);
+  });
+});
 
 /**
  * Handles Form Submission on form.html
