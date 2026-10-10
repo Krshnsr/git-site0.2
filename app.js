@@ -43,7 +43,7 @@ function handleFormSubmission(event) {
   localStorage.setItem(code, JSON.stringify(submissionData));
 
   // 2. Google Sheet par data bhejne ke liye Web App URL
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzBLh897sQvwu7SNqSOifqqO13mMlqnqfue5_l1ZEoWxOPCnChDNN6dD8fqEhUdhPbZ/exec';
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwJNzbWDL8m7og0RPTSFaBwqGCh9MFs2JaakLyhdYWWospnst8k7rs-Iod6qtdobNLe/exec';
 
   // 3. Fetch API ke zariye Google Sheet Database mein POST request bhejna
   fetch(WEB_APP_URL, {
