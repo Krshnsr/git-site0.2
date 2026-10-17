@@ -21,19 +21,15 @@ interface SubmissionData {
   maxBudget: number;
   userName: string;
   userContact: string;
-  suggestions: GiftSuggestion[];
+  suggestions: GiftSuggestion[] | string;
 }
 
 interface SheetResponse {
   status?: string;
   message?: string;
   code?: string;
-  date?: string;
-  recipientName?: string;
-  relationship?: string;
-  occasion?: string;
-  maxBudget?: number;
-  suggestions?: GiftSuggestion[] | string;
+  record?: SubmissionData;
+  records?: SubmissionData[];
   [key: string]: unknown;
 }
 
@@ -52,10 +48,20 @@ const SHEET_WEB_APP_URL: string =
   'https://script.google.com/macros/s/AKfycbwJNzbWDL8m7og0RPTSFaBwqGCh9MFs2JaakLyhdYWWospnst8k7rs-Iod6qtdobNLe/exec';
 
 /**
- * Form Submission Handler
+ * Form Submission Handler (Double-Submit Protection के साथ)
  */
 async function handleFormSubmission(event: SubmitEvent): Promise<void> {
   event.preventDefault();
+
+  // सबमिट बटन को तुरंत लॉक करें ताकि डबल क्लिक से दो बार डेटा न जाए
+  const formEl = event.target as HTMLFormElement | null;
+  const submitBtn = formEl?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  const originalBtnText: string = submitBtn ? submitBtn.innerText : 'Submit';
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Saving... Please wait';
+  }
 
   const code: string = generateReferenceCode();
   const interests: string = (document.getElementById('interests') as HTMLInputElement | null)?.value.trim() || '';
@@ -90,7 +96,7 @@ async function handleFormSubmission(event: SubmitEvent): Promise<void> {
       mode: 'cors',
       redirect: 'follow',
       headers: {
-        'Content-Type': 'text/plain;charset=utf-8' // CORS preflight issue bypass karne ke liye
+        'Content-Type': 'text/plain;charset=utf-8'
       },
       body: JSON.stringify({
         action: 'save',
@@ -107,12 +113,18 @@ async function handleFormSubmission(event: SubmitEvent): Promise<void> {
     window.location.href = `results.html?code=${code}`;
   } catch (error: unknown) {
     console.error('Save error:', error);
-    alert('There was an error saving your gift data.');
+    alert('There was an error saving your gift data. Please try again.');
+    
+    // अगर कोई एरर आए तो बटन को वापस अनलॉक कर दें
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalBtnText;
+    }
   }
 }
 
 /**
- * Handles Lookup on index.html
+ * Handles Lookup on index.html (result.record सपोर्ट के साथ)
  */
 async function lookupCode(event: SubmitEvent): Promise<void> {
   event.preventDefault();
@@ -125,6 +137,15 @@ async function lookupCode(event: SubmitEvent): Promise<void> {
     return;
   }
 
+  const formEl = event.target as HTMLFormElement | null;
+  const submitBtn = formEl?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  const originalBtnText: string = submitBtn ? submitBtn.innerText : 'Search';
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Searching...';
+  }
+
   try {
     const response: Response = await fetch(`${SHEET_WEB_APP_URL}?code=${encodeURIComponent(code)}`, {
       method: 'GET',
@@ -132,16 +153,22 @@ async function lookupCode(event: SubmitEvent): Promise<void> {
       redirect: 'follow'
     });
 
-    const data: SheetResponse = await response.json();
+    const result: SheetResponse = await response.json();
+    const record: SubmissionData | undefined = result.record || (result.code ? (result as unknown as SubmissionData) : undefined);
 
-    if (data && data.code) {
-      window.location.href = `results.html?code=${code}`;
+    if (result.status === 'success' && record && record.code) {
+      window.location.href = `results.html?code=${encodeURIComponent(record.code)}`;
     } else {
       alert(`Code "${code}" was not found. Please verify the code or start a new gift search.`);
     }
   } catch (error: unknown) {
     console.error('Sheet Lookup Error:', error);
     alert('Could not fetch data from Google Sheets.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalBtnText;
+    }
   }
 }
 
@@ -151,19 +178,22 @@ async function lookupCode(event: SubmitEvent): Promise<void> {
 function generateUniqueSuggestions(
   interests: string,
   occasion: string,
-  relationship: string,
+  _relationship: string,
   maxBudget: number,
   avoid: string
 ): GiftSuggestion[] {
   const halfBudget: number = Math.round(maxBudget * 0.5);
   const fullBudget: number = Math.round(maxBudget * 0.95);
+  const cleanInterest: string = interests || 'creative arts';
+  const cleanOccasion: string = occasion ? occasion.toLowerCase() : 'special occasion';
+  const cleanAvoid: string = avoid ? avoid.slice(0, 30) : 'generic items';
 
   return [
     {
       title: 'Hand-Bound Memory & Milestone Journal',
       category: 'Personalized Keepsake',
       price: `₹${Math.round(maxBudget * 0.35)} - ₹${halfBudget}`,
-      effortReason: `Customized with their name and key memories connected to ${occasion.toLowerCase()}. It avoids generic store-bought items and feels thoughtful and personal.`,
+      effortReason: `Customized with their name and key memories connected to ${cleanOccasion}. It avoids generic store-bought items and feels thoughtful and personal.`,
       buyUrl: 'https://www.etsy.com/in-en/search?q=custom+leather+anniversary+journal',
       platform: 'Etsy Artisanal Makers'
     },
@@ -171,15 +201,15 @@ function generateUniqueSuggestions(
       title: 'Exclusive Masterclass / Workshop Experience Pass',
       category: 'Experiential Gift',
       price: `₹${halfBudget} - ₹${fullBudget}`,
-      effortReason: `Tailored to their genuine interest in "${interests.slice(0, 35)}". Experiential gifts create lasting memories without adding more clutter.`,
-      buyUrl: `https://www.google.com/search?q=${encodeURIComponent(interests)}+workshop+experience+classes`,
+      effortReason: `Tailored to their genuine interest in "${cleanInterest.slice(0, 35)}". Experiential gifts create lasting memories without adding more clutter.`,
+      buyUrl: `https://www.google.com/search?q=${encodeURIComponent(cleanInterest)}+workshop+experience+classes`,
       platform: 'Local Craft Studios & Online Masterclasses'
     },
     {
       title: 'Small-Batch Single-Estate Craft Discovery Crate',
       category: 'Artisanal Consumable',
       price: `₹${Math.round(maxBudget * 0.3)} - ₹${Math.round(maxBudget * 0.6)}`,
-      effortReason: `Hand-selected specialty gourmet or craft goods from independent makers. It avoids common items they already own and feels considered rather than random (${avoid.slice(0, 30)}).`,
+      effortReason: `Hand-selected specialty gourmet or craft goods from independent makers. It avoids common items they already own and feels considered rather than random (strictly avoiding: ${cleanAvoid}).`,
       buyUrl: 'https://www.amazon.in/s?k=gourmet+artisan+gift+hamper',
       platform: 'Curated Direct-to-Consumer Brands'
     }
@@ -202,6 +232,9 @@ async function initResultsPage(): Promise<void> {
     return;
   }
 
+  if (resultCodeEl) resultCodeEl.textContent = code;
+  if (resultMetaEl) resultMetaEl.textContent = 'Loading your personalized gift suggestions...';
+
   try {
     const response: Response = await fetch(`${SHEET_WEB_APP_URL}?code=${encodeURIComponent(code)}`, {
       method: 'GET',
@@ -209,17 +242,28 @@ async function initResultsPage(): Promise<void> {
       redirect: 'follow'
     });
 
-    const data: SheetResponse = await response.json();
+    const result: SheetResponse = await response.json();
+    // Google Sheet के doGet से डेटा result.record के अंदर आता है
+    const record: SubmissionData | undefined = result.record || (result.code ? (result as unknown as SubmissionData) : undefined);
 
-    if (!data || !data.code) {
+    if (result.status !== 'success' || !record || !record.code) {
       if (resultCodeEl) resultCodeEl.textContent = code;
       if (resultMetaEl) resultMetaEl.textContent = 'No data found for this code in Google Sheets.';
       return;
     }
 
-    if (resultCodeEl) resultCodeEl.textContent = data.code;
+    // यदि तारीख लंबी ISO स्ट्रिंग बन गई हो तो उसे साफ दिखाएं
+    let displayDate: string = String(record.date || '');
+    if (displayDate.includes('T')) {
+      const parsedDate = new Date(displayDate);
+      if (!isNaN(parsedDate.getTime())) {
+        displayDate = parsedDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    }
+
+    if (resultCodeEl) resultCodeEl.textContent = String(record.code);
     if (resultMetaEl) {
-      resultMetaEl.textContent = `Occasion: ${data.occasion || ''} | For: ${data.recipientName || ''} (${data.relationship || ''}) | Budget Cap: ₹${data.maxBudget || ''} | Saved: ${data.date || ''}`;
+      resultMetaEl.textContent = `Occasion: ${record.occasion || 'N/A'} | For: ${record.recipientName || 'Recipient'} (${record.relationship || 'Special'}) | Budget Cap: ₹${record.maxBudget || ''} | Saved: ${displayDate}`;
     }
 
     const container = document.getElementById('cards-container') as HTMLElement | null;
@@ -228,14 +272,19 @@ async function initResultsPage(): Promise<void> {
     container.innerHTML = '';
 
     let suggestions: GiftSuggestion[] = [];
-    if (Array.isArray(data.suggestions)) {
-      suggestions = data.suggestions as GiftSuggestion[];
-    } else if (typeof data.suggestions === 'string') {
+    if (Array.isArray(record.suggestions)) {
+      suggestions = record.suggestions;
+    } else if (typeof record.suggestions === 'string') {
       try {
-        suggestions = JSON.parse(data.suggestions) as GiftSuggestion[];
+        suggestions = JSON.parse(record.suggestions) as GiftSuggestion[];
       } catch {
         suggestions = [];
       }
+    }
+
+    if (suggestions.length === 0) {
+      container.innerHTML = '<p>No specific suggestions found for this entry.</p>';
+      return;
     }
 
     suggestions.forEach((item: GiftSuggestion) => {
