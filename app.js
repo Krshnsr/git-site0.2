@@ -9,7 +9,7 @@ function generateReferenceCode() {
 /**
  * Google Apps Script Web App URL
  */
-const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwJNzbWDL8m7og0RPTSFaBwqGCh9MFs2JaakLyhdYWWospnst8k7rs-Iod6qtdobNLe/exec';
+const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwJpF4PsGypDbQlDWSm69SAmJ6xY5qGu4_SzGSBE0MsIeriOMQGdY_U7oJZbIpsf2N7/exec';
 /**
  * Form Submission Handler (Double-Submit Protection के साथ)
  */
