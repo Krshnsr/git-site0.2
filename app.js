@@ -271,4 +271,3 @@ document.addEventListener('DOMContentLoaded', () => {
         initResultsPage();
     }
 });
-//# sourceMappingURL=app.js.map

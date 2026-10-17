@@ -3,14 +3,10 @@
   "version": "1.0.0",
   "description": "Gift recommendation web application with Google Apps Script",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
     "serve": "live-server --port=5500 --entry-file=index.html",
-    "dev": "concurrently \"npm run watch\" \"npm run serve\""
+    "dev": "npm run serve"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "live-server": "^1.2.2",
-    "typescript": "^5.9.3"
+    "live-server": "^1.2.2"
   }
 }
