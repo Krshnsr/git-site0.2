@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game of Squires: Tactical Escape</title>
+    <style>
+        body { margin: 0; background: #1a1a1a; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
+        canvas { display: block; background: #222; cursor: crosshair; }
+        #ui { 
+            position: absolute; top: 20px; left: 20px; color: #0f0; 
+            pointer-events: none; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .controls { position: absolute; bottom: 20px; left: 20px; color: #555; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        Score: <span id="score">0</span><br>
+        Dash: <span id="dashStatus">READY</span>
+    </div>
+    <div class="controls">MOVE: MOUSE | DASH: SPACEBAR</div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const dashEl = document.getElementById('dashStatus');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let score = 0;
+let gameOver = false;
+let dashCooldown = 0;
+let isDashing = false;
+
+// Mouse Tracking
+const mouse = { x: canvas.width / 2, y: canvas.height / 2, radius: 8 };
+let lastX = mouse.x, lastY = mouse.y;
+let vX = 0, vY = 0;
+
+// Squire Configuration
+const squires = [
+    { x: 0, y: 0, color: '#ff4444', type: 'CHASER' },
+    { x: canvas.width, y: 0, color: '#ff8800', type: 'INTERCEPTOR' },
+    { x: 0, y: canvas.height, color: '#ff00ff', type: 'FLANKER_L' },
+    { x: canvas.width, y: canvas.height, color: '#ffff00', type: 'FLANKER_R' }
+];
+
+const BASE_SPEED = 2.8;
+const SQUIRE_RADIUS = 14;
+
+window.addEventListener('mousemove', (e) => {
+    vX = e.clientX - lastX;
+    vY = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    
+    if (!isDashing) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    }
+});
+
+// Dash Mechanic
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && dashCooldown <= 0) {
+        isDashing = true;
+        dashCooldown = 100; // Frames until next dash
+        
+        // Instant thrust in current direction of travel
+        const angle = Math.atan2(vY, vX);
+        mouse.x += Math.cos(angle) * 150;
+        mouse.y += Math.sin(angle) * 150;
+        
+        setTimeout(() => { isDashing = false; }, 100);
+    }
+});
+
+function update() {
+    if (gameOver) return;
+
+    score++;
+    scoreEl.innerText = Math.floor(score / 10);
+    
+    if (dashCooldown > 0) {
+        dashCooldown--;
+        dashEl.innerText = "CHARGING...";
+        dashEl.style.color = "#f00";
+    } else {
+        dashEl.innerText = "READY";
+        dashEl.style.color = "#0f0";
+    }
+
+    squires.forEach((s, i) => {
+        let tX = mouse.x;
+        let tY = mouse.y;
+
+        // Tactical AI Positioning
+        if (s.type === 'INTERCEPTOR') {
+            tX += vX * 20; // Aims way ahead
+            tY += vY * 20;
+        } else if (s.type === 'FLANKER_L') {
+            tX += 150; tY -= 150;
+        } else if (s.type === 'FLANKER_R') {
+            tX -= 150; tY += 150;
+        }
+
+        const dx = tX - s.x;
+        const dy = tY - s.y;
+        const distToTarget = Math.sqrt(dx*dx + dy*dy);
+
+        if (distToTarget > 0) {
+            s.x += (dx / distToTarget) * BASE_SPEED;
+            s.y += (dy / distToTarget) * BASE_SPEED;
+        }
+
+        // Check Collision with Mouse
+        const distToMouse = Math.sqrt((mouse.x - s.x)**2 + (mouse.y - s.y)**2);
+        if (distToMouse < mouse.radius + SQUIRE_RADIUS) {
+            gameOver = true;
+            alert(`CAUGHT. Score: ${Math.floor(score/10)}\nTry harder next time.`);
+            location.reload();
+        }
+    });
+}
+
+function draw() {
+    ctx.fillStyle = 'rgba(34, 34, 34, 0.3)'; // Motion blur effect
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Player
+    ctx.fillStyle = isDashing ? '#fff' : '#0f0';
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI*2);
+    ctx.fill();
+
+    // Draw Squires
+    squires.forEach(s => {
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, SQUIRE_RADIUS, 0, Math.PI*2);
+        ctx.fill();
+        
+        // Draw "Aura" to show their threat radius
+        ctx.strokeStyle = s.color;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, SQUIRE_RADIUS + 5, 0, Math.PI*2);
+        ctx.stroke();
+    });
+
+    update();
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

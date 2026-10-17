@@ -729,6 +729,13 @@ body {
   margin-bottom: 0.4rem;
 }
 
+.form-help {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -778,6 +785,33 @@ input:focus, select:focus, textarea:focus {
 .meta-summary {
   font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+.results-intro {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.results-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.results-filters[hidden] {
+  display: none;
+}
+
+.result-filter {
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+}
+
+.result-filter.is-active {
+  border-color: #a78bfa;
+  background: rgba(139, 92, 246, 0.18);
+  color: #fff;
 }
 
 .results-grid {

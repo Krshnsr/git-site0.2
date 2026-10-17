@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h3>Photo Resizer (200x230)</h3>
+    <input type="file" id="upload" accept="image/*"><br><br>
+    <canvas id="canvas" width="200" height="230" style="border:1px solid #000;"></canvas><br>
+    <button onclick="downloadImage()">Download JPG</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        document.getElementById('upload').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // Fill background with white as per guidelines [cite: 5]
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, 200, 230);
+                    
+                    // Draw image resized to 200x230 
+                    ctx.drawImage(img, 0, 0, 200, 230);
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        function downloadImage() {
+            // Save as JPG [cite: 38]
+            const link = document.createElement('a');
+            link.download = 'photo_shikha.jpg';
+            // Adjust quality (0.7) to stay between 20kb-50kb [cite: 12]
+            link.href = canvas.toDataURL('image/jpeg', 2.7);
+            link.click();
+        }
+    </script>
+</body>
+</html>

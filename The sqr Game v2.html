@@ -1,0 +1,55 @@
+// Add a way to track mouse velocity for the Interceptor
+let lastMouseX = mouse.x;
+let lastMouseY = mouse.y;
+let mouseVX = 0;
+let mouseVY = 0;
+
+window.addEventListener('mousemove', (e) => {
+    mouseVX = e.clientX - lastMouseX;
+    mouseVY = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+function update() {
+    if (gameOver) return;
+    score++;
+    scoreEl.innerText = Math.floor(score / 10);
+
+    squires.forEach((s, index) => {
+        let targetX = mouse.x;
+        let targetY = mouse.y;
+
+        // DICTATE UNIQUE ROLES
+        if (index === 1) { // Interceptor: Aims ahead of you
+            targetX += mouseVX * 15; 
+            targetY += mouseVY * 15;
+        } else if (index === 2) { // Flanker Left
+            targetX += 100; 
+            targetY -= 100;
+        } else if (index === 3) { // Flanker Right
+            targetX -= 100; 
+            targetY += 100;
+        }
+
+        const dx = targetX - s.x;
+        const dy = targetY - s.y;
+        const distanceToTarget = Math.sqrt(dx * dx + dy * dy);
+
+        // Move toward the SPECIFIC target
+        if (distanceToTarget > 0) {
+            s.x += (dx / distanceToTarget) * squireSpeed;
+            s.y += (dy / distanceToTarget) * squireSpeed;
+        }
+
+        // COLLISION: Still checked against the actual mouse position
+        const distToMouse = Math.sqrt((mouse.x - s.x)**2 + (mouse.y - s.y)**2);
+        if (distToMouse < mouse.radius + squireRadius) {
+            gameOver = true;
+            alert("Flanked and captured! Final Score: " + Math.floor(score / 10));
+            location.reload();
+        }
+    });
+}

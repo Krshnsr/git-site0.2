@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squires: Small Arena</title>
+    <style>
+        /* Center the game in the middle of the screen */
+        body { 
+            margin: 0; 
+            background: #111; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+        #ui { margin-bottom: 10px; text-align: center; width: 400px; display: flex; justify-content: space-between; }
+        canvas { 
+            background: #222; 
+            border: 2px solid #0f0; 
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            cursor: none; /* Hide cursor to use the custom player dot */
+        }
+        .hint { margin-top: 10px; color: #555; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>DASH: <span id="dashStatus">READY</span></div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="hint">SPACEBAR TO DASH | DON'T TOUCH THE RED</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const dashEl = document.getElementById('dashStatus');
+
+// SMALL ARENA CONFIG
+const ARENA_SIZE = 500; 
+canvas.width = ARENA_SIZE;
+canvas.height = ARENA_SIZE;
+
+let score = 0;
+let gameOver = false;
+let dashCooldown = 0;
+let isDashing = false;
+
+// Player/Mouse state
+const mouse = { x: ARENA_SIZE/2, y: ARENA_SIZE/2, radius: 6 };
+let lastX = mouse.x, lastY = mouse.y;
+let vX = 0, vY = 0;
+
+// Squires (AI)
+const squires = [
+    { x: 0, y: 0, color: '#ff4444', type: 'CHASER' },
+    { x: ARENA_SIZE, y: 0, color: '#ff8800', type: 'INTERCEPTOR' },
+    { x: 0, y: ARENA_SIZE, color: '#ff00ff', type: 'FLANKER_L' },
+    { x: ARENA_SIZE, y: ARENA_SIZE, color: '#ffff00', type: 'FLANKER_R' }
+];
+
+const BASE_SPEED = 2.2; // Slightly slower for smaller space
+const SQUIRE_RADIUS = 12;
+
+// Mouse Tracking with Rect Offset Correction
+window.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+
+    vX = currentX - lastX;
+    vY = currentY - lastY;
+    lastX = currentX;
+    lastY = currentY;
+    
+    if (!isDashing) {
+        mouse.x = currentX;
+        mouse.y = currentY;
+    }
+});
+
+// Dash Mechanic
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && dashCooldown <= 0) {
+        isDashing = true;
+        dashCooldown = 80; 
+        
+        const angle = Math.atan2(vY, vX);
+        mouse.x += Math.cos(angle) * 100;
+        mouse.y += Math.sin(angle) * 100;
+        
+        setTimeout(() => { isDashing = false; }, 80);
+    }
+});
+
+function update() {
+    if (gameOver) return;
+
+    score++;
+    scoreEl.innerText = Math.floor(score / 10);
+    
+    // Bounds Enforcement
+    if (mouse.x < 0) mouse.x = 0;
+    if (mouse.x > ARENA_SIZE) mouse.x = ARENA_SIZE;
+    if (mouse.y < 0) mouse.y = 0;
+    if (mouse.y > ARENA_SIZE) mouse.y = ARENA_SIZE;
+
+    if (dashCooldown > 0) {
+        dashCooldown--;
+        dashEl.innerText = "WAIT";
+        dashEl.style.color = "#f44";
+    } else {
+        dashEl.innerText = "READY";
+        dashEl.style.color = "#0f0";
+    }
+
+    squires.forEach((s) => {
+        let tX = mouse.x;
+        let tY = mouse.y;
+
+        // Smaller offsets for a smaller arena
+        if (s.type === 'INTERCEPTOR') {
+            tX += vX * 12; 
+            tY += vY * 12;
+        } else if (s.type === 'FLANKER_L') {
+            tX += 60; tY -= 60;
+        } else if (s.type === 'FLANKER_R') {
+            tX -= 60; tY += 60;
+        }
+
+        const dx = tX - s.x;
+        const dy = tY - s.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist > 0) {
+            s.x += (dx / dist) * BASE_SPEED;
+            s.y += (dy / dist) * BASE_SPEED;
+        }
+
+        // Collision Check
+        const distToMouse = Math.sqrt((mouse.x - s.x)**2 + (mouse.y - s.y)**2);
+        if (distToMouse < mouse.radius + SQUIRE_RADIUS) {
+            gameOver = true;
+            alert("CAPTURED. FINAL SCORE: " + Math.floor(score/10));
+            location.reload();
+        }
+    });
+}
+
+function draw() {
+    ctx.fillStyle = 'rgba(20, 20, 20, 0.4)'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Player
+    ctx.fillStyle = isDashing ? '#fff' : '#0f0';
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI*2);
+    ctx.fill();
+
+    // Squires
+    squires.forEach(s => {
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, SQUIRE_RADIUS, 0, Math.PI*2);
+        ctx.fill();
+    });
+
+    update();
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

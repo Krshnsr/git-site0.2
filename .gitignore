@@ -1,2 +1,6 @@
 ﻿node_modules/
+.env
+.env.*
+!.env.example
+main.env
 .DS_Store
