@@ -27,27 +27,37 @@ async function handleFormSubmission(event) {
     const interests = document.getElementById('interests')?.value.trim() || '';
     const occasion = document.getElementById('occasion')?.value || '';
     const relationship = document.getElementById('relationship')?.value || '';
+    const aiProvider = document.getElementById('ai-provider')?.value || 'gemini';
     const recipientName = document.getElementById('recipient-name')?.value.trim() || '';
     const maxBudgetValue = document.getElementById('max-budget')?.value || '';
     const maxBudget = parseFloat(maxBudgetValue) || 5000;
     const avoid = document.getElementById('avoid')?.value.trim() || '';
     const userName = document.getElementById('user-name')?.value.trim() || '';
     const userContact = document.getElementById('user-contact')?.value.trim() || '';
-    const suggestions = generateUniqueSuggestions(interests, occasion, relationship, maxBudget, avoid);
-    const submissionData = {
-        code,
-        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        recipientName,
-        relationship,
-        occasion,
-        interests,
-        avoid,
-        maxBudget,
-        userName,
-        userContact,
-        suggestions
-    };
     try {
+        const aiResponse = await fetch('/api/recommendations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: aiProvider, occasion, relationship, interests, avoid, maxBudget })
+        });
+        const aiResult = await aiResponse.json();
+        if (!aiResponse.ok || !Array.isArray(aiResult.suggestions)) {
+            throw new Error(aiResult.error || 'Could not generate AI gift ideas.');
+        }
+        const submissionData = {
+            code,
+            date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            recipientName,
+            relationship,
+            occasion,
+            interests,
+            avoid,
+            maxBudget,
+            userName,
+            userContact,
+            aiProvider,
+            suggestions: aiResult.suggestions
+        };
         const response = await fetch(SHEET_WEB_APP_URL, {
             method: 'POST',
             mode: 'cors',
@@ -68,7 +78,7 @@ async function handleFormSubmission(event) {
     }
     catch (error) {
         console.error('Save error:', error);
-        alert('There was an error saving your gift data. Please try again.');
+        alert(error instanceof Error ? error.message : 'There was an error generating or saving your gift ideas.');
         // अगर कोई एरर आए तो बटन को वापस अनलॉक कर दें
         if (submitBtn) {
             submitBtn.disabled = false;
@@ -119,42 +129,6 @@ async function lookupCode(event) {
             submitBtn.innerText = originalBtnText;
         }
     }
-}
-/**
- * Intelligent Suggestion Rule Engine
- */
-function generateUniqueSuggestions(interests, occasion, _relationship, maxBudget, avoid) {
-    const halfBudget = Math.round(maxBudget * 0.5);
-    const fullBudget = Math.round(maxBudget * 0.95);
-    const cleanInterest = interests || 'creative arts';
-    const cleanOccasion = occasion ? occasion.toLowerCase() : 'special occasion';
-    const cleanAvoid = avoid ? avoid.slice(0, 30) : 'generic items';
-    return [
-        {
-            title: 'Hand-Bound Memory & Milestone Journal',
-            category: 'Personalized Keepsake',
-            price: `₹${Math.round(maxBudget * 0.35)} - ₹${halfBudget}`,
-            effortReason: `Customized with their name and key memories connected to ${cleanOccasion}. It avoids generic store-bought items and feels thoughtful and personal.`,
-            buyUrl: 'https://www.etsy.com/in-en/search?q=custom+leather+anniversary+journal',
-            platform: 'Etsy Artisanal Makers'
-        },
-        {
-            title: 'Exclusive Masterclass / Workshop Experience Pass',
-            category: 'Experiential Gift',
-            price: `₹${halfBudget} - ₹${fullBudget}`,
-            effortReason: `Tailored to their genuine interest in "${cleanInterest.slice(0, 35)}". Experiential gifts create lasting memories without adding more clutter.`,
-            buyUrl: `https://www.google.com/search?q=${encodeURIComponent(cleanInterest)}+workshop+experience+classes`,
-            platform: 'Local Craft Studios & Online Masterclasses'
-        },
-        {
-            title: 'Small-Batch Single-Estate Craft Discovery Crate',
-            category: 'Artisanal Consumable',
-            price: `₹${Math.round(maxBudget * 0.3)} - ₹${Math.round(maxBudget * 0.6)}`,
-            effortReason: `Hand-selected specialty gourmet or craft goods from independent makers. It avoids common items they already own and feels considered rather than random (strictly avoiding: ${cleanAvoid}).`,
-            buyUrl: 'https://www.amazon.in/s?k=gourmet+artisan+gift+hamper',
-            platform: 'Curated Direct-to-Consumer Brands'
-        }
-    ];
 }
 /**
  * Initializes Results Page (results.html)
@@ -217,33 +191,100 @@ async function initResultsPage() {
                 suggestions = JSON.parse(record.suggestions);
             }
             catch {
-                suggestions = [];
+                container.textContent = 'Saved gift ideas could not be read. Please create a new search.';
+                return;
             }
         }
-        if (suggestions.length === 0) {
-            container.innerHTML = '<p>No specific suggestions found for this entry.</p>';
+        if (!Array.isArray(suggestions) || suggestions.length === 0) {
+            container.textContent = 'No specific suggestions found for this entry.';
             return;
+        }
+        const categories = [...new Set(suggestions
+                .map((item) => typeof item?.category === 'string' ? item.category.trim() : '')
+                .filter(Boolean))];
+        const aiProvider = suggestions.find((item) => typeof item?.generatedBy === 'string')?.generatedBy;
+        const heading = document.getElementById('results-heading');
+        if (heading) {
+            heading.textContent = aiProvider ? `${aiProvider}-generated gift ideas` : 'Personalized gift ideas';
+        }
+        const filters = document.getElementById('category-filters');
+        if (filters && categories.length > 0) {
+            filters.hidden = false;
+            const addFilter = (label, selectedCategory) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'btn btn-outline result-filter';
+                button.textContent = label;
+                button.setAttribute('aria-pressed', String(selectedCategory === null));
+                if (selectedCategory === null) {
+                    button.classList.add('is-active');
+                }
+                button.addEventListener('click', () => {
+                    container.querySelectorAll('.gift-card').forEach((card) => {
+                        card.hidden = selectedCategory !== null && card.dataset.category !== selectedCategory;
+                    });
+                    filters.querySelectorAll('.result-filter').forEach((filterButton) => {
+                        const isSelected = filterButton === button;
+                        filterButton.setAttribute('aria-pressed', String(isSelected));
+                        filterButton.classList.toggle('is-active', isSelected);
+                    });
+                });
+                filters.appendChild(button);
+            };
+            filters.replaceChildren();
+            addFilter('All ideas', null);
+            categories.forEach((category) => addFilter(category, category));
         }
         suggestions.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'gift-card';
-            card.innerHTML = `
-        <div class="gift-header">
-          <div>
-            <span class="gift-category">${item.category}</span>
-            <div class="gift-title">${item.title}</div>
-          </div>
-          <div class="gift-price">${item.price}</div>
-        </div>
-        <div class="thoughtful-highlight">
-          <strong>Why it shows extra effort:</strong> ${item.effortReason}
-        </div>
-        <div class="buy-action">
-          <a href="${item.buyUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
-            View & Buy on ${item.platform} &rarr;
-          </a>
-        </div>
-      `;
+            const category = typeof item?.category === 'string' && item.category.trim() ? item.category.trim() : 'Gift idea';
+            card.dataset.category = category;
+
+            const header = document.createElement('div');
+            header.className = 'gift-header';
+            const details = document.createElement('div');
+            const categoryLabel = document.createElement('span');
+            categoryLabel.className = 'gift-category';
+            categoryLabel.textContent = category;
+            const title = document.createElement('div');
+            title.className = 'gift-title';
+            title.textContent = typeof item?.title === 'string' ? item.title : 'Gift suggestion';
+            details.append(categoryLabel, title);
+
+            const price = document.createElement('div');
+            price.className = 'gift-price';
+            price.textContent = typeof item?.price === 'string' ? item.price : 'Price varies';
+            header.append(details, price);
+
+            const reason = document.createElement('div');
+            reason.className = 'thoughtful-highlight';
+            const reasonLabel = document.createElement('strong');
+            reasonLabel.textContent = 'Why it suits them: ';
+            reason.append(reasonLabel, document.createTextNode(
+                typeof item?.effortReason === 'string' ? item.effortReason : 'A thoughtful option based on your preferences.'
+            ));
+
+            const buyAction = document.createElement('div');
+            buyAction.className = 'buy-action';
+            const buyLink = document.createElement('a');
+            buyLink.className = 'btn btn-outline';
+            buyLink.style.fontSize = '0.85rem';
+            buyLink.style.padding = '0.5rem 1rem';
+            buyLink.target = '_blank';
+            buyLink.rel = 'noopener noreferrer';
+            buyLink.textContent = `View options on ${typeof item?.platform === 'string' ? item.platform : 'Google Shopping'} →`;
+            try {
+                const url = new URL(item?.buyUrl);
+                buyLink.href = ['https:', 'http:'].includes(url.protocol)
+                    ? url.href
+                    : `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(title.textContent)}`;
+            }
+            catch {
+                buyLink.href = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(title.textContent)}`;
+            }
+            buyAction.appendChild(buyLink);
+            card.append(header, reason, buyAction);
             container.appendChild(card);
         });
     }
