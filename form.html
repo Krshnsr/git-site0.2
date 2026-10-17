@@ -1,6 +1,36 @@
 <form id="gift-search-form">
   <h4 class="form-section-title">1. Recipient Details</h4>
 
+  <header class="navbar">
+    <div class="brand"><a href="index.html">Thoughtful<span>Gifts</span></a></div>
+
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="form.html" class="active">Find a Gift</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="form-container card">
+      <div class="form-header">
+        <h2>Tell Us Who You're Celebrating</h2>
+        <p>We'll match your answers against a wide range, effort-driven gifts within your budget preferably different from others.</p>
+      </div>
+
+      <form id="gift-search-form" onsubmit="handleFormSubmission(event)">
+
+        <!-- Section 1: Recipient Profile -->
+        <h4 class="form-section-title">1. Recipient Details</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="occasion">Occasion *</label>
+            <select id="occasion" required>
+              <option value="">Select occasion</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Anniversary">Anniversary</option>
+              <option value="Milestone Celebration">Milestone Celebration</option>
+            </select>
+          </div>
   <div class="form-row">
     <div class="form-group">
       <label for="occasion">Occasion *</label>
@@ -55,6 +85,11 @@
       <input type="text" id="user-name" placeholder="e.g. Krishan" required />
     </div>
 
+        <button type="submit" class="btn btn-gradient btn-block">
+          Generate Form Code & Get Unique Gifts &rarr;
+        </button>
+        <p id="submission-status" role="status" aria-live="polite"></p>
+      </form>
     <div class="form-group">
       <label for="user-contact">Your Email or Mobile Number *</label>
       <input type="text" id="user-contact" placeholder="e.g. name@example.com or 9876543210" required />

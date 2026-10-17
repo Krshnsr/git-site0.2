@@ -5,6 +5,37 @@ function generateReferenceCode() {
   const num = Math.floor(10000 + Math.random() * 90000);
   return `GIFT-${num}`;
 }
+const form = document.querySelector('#giftForm');
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0hGx4xxNdSy5dYkOBRi2LACbQAR8TOMa5WY3Wtz2VUg-_pigl6dzzgH_zr2EMFezb/execL';
+
+if (form) form.addEventListener('submit', function (e) {
+  e.preventDefault(); // पेज को तुरंत रीलोड होने से रोकें
+
+  const payload = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    budget: document.getElementById('budget').value,
+    occasion: document.getElementById('occasion').value,
+    interests: document.getElementById('interests').value
+  };
+
+  // Google Apps Script को डेटा भेजने के लिए:
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors', // CORS ब्लॉक से बचने के लिए जरूरी
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    alert('डेटा सफलतापूर्वक सेव हो गया!');
+    form.reset();
+  })
+  .catch(error => {
+    console.error('Error submitting form:', error);
+  });
+});
 
 /**
  * Google Apps Script Web App URL
@@ -14,6 +45,9 @@ const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwJNzbWDL8m7o
 
 async function handleFormSubmission(event) {
   event.preventDefault();
+
+  const statusEl = document.getElementById('submission-status');
+  const submitButton = event.currentTarget.querySelector('button[type="submit"]');
 
   const code = generateReferenceCode();
   const interests = document.getElementById('interests')?.value.trim() || '';
@@ -41,6 +75,46 @@ async function handleFormSubmission(event) {
     suggestions
   };
 
+  // 1. Save to localStorage (Aapke local backup ke liye)
+  localStorage.setItem(code, JSON.stringify(submissionData));
+
+  // 2. Google Sheet par data bhejne ke liye Web App URL
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby0hGx4xxNdSy5dYkOBRi2LACbQAR8TOMa5WY3Wtz2VUg-_pigl6dzzgH_zr2EMFezb/exec';
+
+  // 3. Fetch API ke zariye Google Sheet Database mein POST request bhejna
+  statusEl.textContent = 'Submitting your form...';
+  statusEl.dataset.state = 'pending';
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(submissionData)
+    });
+    const responseText = await response.text();
+    let responseData;
+
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = null;
+    }
+
+    if (!response.ok || responseData?.success === false || responseData?.status === 'error' || responseData?.error) {
+      throw new Error(responseData?.message || responseData?.error || `Request failed (${response.status})`);
+    }
+
+    statusEl.textContent = 'Form successfully sent. Opening your results...';
+    statusEl.dataset.state = 'success';
+    window.location.href = `results.html?code=${code}&sheet=success`;
+  } catch (error) {
+    console.error('Sheet Error:', error);
+    statusEl.textContent = `Could not send your form: ${error.message}. Please try again.`;
+    statusEl.dataset.state = 'error';
+    submitButton.disabled = false;
   try {
     const response = await fetch(SHEET_WEB_APP_URL, {
       method: 'POST',
@@ -154,6 +228,28 @@ async function initResultsPage() {
       return;
     }
 
+  const data = JSON.parse(storedData);
+  document.getElementById('result-code').textContent = data.code;
+  document.getElementById('result-meta').textContent = 
+    `Occasion: ${data.occasion} | For: ${data.recipientName} (${data.relationship}) | Budget Cap: ₹${data.maxBudget} \vert{} Saved:${data.date}`;
+
+  if (params.get('sheet') === 'success') {
+    const statusEl = document.getElementById('sheet-status');
+    statusEl.textContent = 'Successfully sent to Google Sheets.';
+    statusEl.dataset.state = 'success';
+  }
+
+  const container = document.getElementById('cards-container');
+  container.innerHTML = '';
+
+  data.suggestions.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'gift-card';
+    card.innerHTML = `
+      <div class="gift-header">
+        <div>
+          <span class="gift-category">${item.category}</span>
+          <div class="gift-title">${item.title}</div>
     document.getElementById('result-code').textContent = data.code;
     document.getElementById('result-meta').textContent =
       `Occasion: ${data.occasion} | For: ${data.recipientName} (${data.relationship}) | Budget Cap: ₹${data.maxBudget} | Saved: ${data.date}`;
