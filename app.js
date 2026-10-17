@@ -6,9 +6,9 @@ function generateReferenceCode() {
   return `GIFT-${num}`;
 }
 const form = document.querySelector('#giftForm');
-const SCRIPT_URL = 'YOUR_COPIED_APPS_SCRIPT_WEB_APP_URL';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0hGx4xxNdSy5dYkOBRi2LACbQAR8TOMa5WY3Wtz2VUg-_pigl6dzzgH_zr2EMFezb/execL';
 
-form.addEventListener('submit', function (e) {
+if (form) form.addEventListener('submit', function (e) {
   e.preventDefault(); // पेज को तुरंत रीलोड होने से रोकें
 
   const payload = {
@@ -40,8 +40,11 @@ form.addEventListener('submit', function (e) {
 /**
  * Handles Form Submission on form.html
  */
-function handleFormSubmission(event) {
+async function handleFormSubmission(event) {
   event.preventDefault();
+
+  const statusEl = document.getElementById('submission-status');
+  const submitButton = event.currentTarget.querySelector('button[type="submit"]');
 
   const code = generateReferenceCode();
   const interests = document.getElementById('interests').value.trim();
@@ -74,26 +77,43 @@ function handleFormSubmission(event) {
   localStorage.setItem(code, JSON.stringify(submissionData));
 
   // 2. Google Sheet par data bhejne ke liye Web App URL
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwJNzbWDL8m7og0RPTSFaBwqGCh9MFs2JaakLyhdYWWospnst8k7rs-Iod6qtdobNLe/exec';
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby0hGx4xxNdSy5dYkOBRi2LACbQAR8TOMa5WY3Wtz2VUg-_pigl6dzzgH_zr2EMFezb/exec';
 
   // 3. Fetch API ke zariye Google Sheet Database mein POST request bhejna
-  fetch(WEB_APP_URL, {
-    method: 'POST', // Yeh HTTP method specify karta hai ki hum data bhej rahe hain
-    headers: {
-      'Content-Type': 'application/json' // Server ko inform karta hai ki data JSON format mein hai
-    },
-    body: JSON.stringify(submissionData) // Pura form data object JSON string mein convert karke bhej rahe hain
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Sheet Success:', data);
-  })
-  .catch((error) => {
-    console.error('Sheet Error:', error);
-  });
+  statusEl.textContent = 'Submitting your form...';
+  statusEl.dataset.state = 'pending';
+  submitButton.disabled = true;
 
-  // Redirect to Results Page with Code in Query String
-  window.location.href = `results.html?code=${code}`;
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(submissionData)
+    });
+    const responseText = await response.text();
+    let responseData;
+
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = null;
+    }
+
+    if (!response.ok || responseData?.success === false || responseData?.status === 'error' || responseData?.error) {
+      throw new Error(responseData?.message || responseData?.error || `Request failed (${response.status})`);
+    }
+
+    statusEl.textContent = 'Form successfully sent. Opening your results...';
+    statusEl.dataset.state = 'success';
+    window.location.href = `results.html?code=${code}&sheet=success`;
+  } catch (error) {
+    console.error('Sheet Error:', error);
+    statusEl.textContent = `Could not send your form: ${error.message}. Please try again.`;
+    statusEl.dataset.state = 'error';
+    submitButton.disabled = false;
+  }
 }
 
 /**
@@ -176,6 +196,12 @@ function initResultsPage() {
   document.getElementById('result-code').textContent = data.code;
   document.getElementById('result-meta').textContent = 
     `Occasion: ${data.occasion} | For: ${data.recipientName} (${data.relationship}) | Budget Cap: ₹${data.maxBudget} \vert{} Saved:${data.date}`;
+
+  if (params.get('sheet') === 'success') {
+    const statusEl = document.getElementById('sheet-status');
+    statusEl.textContent = 'Successfully sent to Google Sheets.';
+    statusEl.dataset.state = 'success';
+  }
 
   const container = document.getElementById('cards-container');
   container.innerHTML = '';

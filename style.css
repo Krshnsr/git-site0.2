@@ -336,6 +336,23 @@ body {
   margin-bottom: 1.25rem;
 }
 
+.submission-status {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.submission-status[data-state="pending"] {
+  color: var(--text-muted);
+}
+
+.submission-status[data-state="success"] {
+  color: #4ade80;
+}
+
+.submission-status[data-state="error"] {
+  color: #f87171;
+}
+
 .form-group label {
   display: block;
   font-size: 0.9rem;
