@@ -31,14 +31,21 @@
   </style>
 </head>
 <body>
-  <header class="navbar">
-    <div class="brand"><a href="index.html">Thoughtful<span>Gifts</span></a></div>
-    <nav class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="form.html">Find a Gift</a>
-      <a href="products.html">Shop</a>
-      <a href="local-shop.html" class="active">Local</a>
-    </nav>
+  <header class="navbar" role="banner">
+    <div class="site-header">
+      <div class="brand"><a href="index.html">Thoughtful<span>Gifts</span></a></div>
+
+      <button class="nav-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" aria-label="Toggle navigation">
+        ☰
+      </button>
+
+      <nav id="primary-navigation" class="nav-primary" role="navigation" aria-label="Primary navigation">
+        <a href="index.html">Home</a>
+        <a href="form.html">Find a Gift</a>
+        <a href="products.html">Shop <span id="nav-cart-count" class="cart-badge" aria-label="Product count">0</span></a>
+        <a href="local-shop.html" class="active">Local</a>
+      </nav>
+    </div>
   </header>
 
   <main class="container">
@@ -47,7 +54,6 @@
         <h1>Local Shop — Coming Soon</h1>
         <p class="muted">This page is a placeholder for listing locally available items, pickup locations, and community vendors.
         You can use this space to add location-based stock, schedules, and local shipping/pickup options later.</p>
-
         <p class="muted small">Admin note: add product lists, maps, contact info, or a small CMS here when ready.</p>
       </div>
     </section>
@@ -56,5 +62,7 @@
   <footer class="footer">
     <p>© 2026 ThoughtfulGifts.</p>
   </footer>
+
+  <script src="nav.js"></script>
 </body>
 </html>
