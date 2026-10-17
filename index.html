@@ -45,6 +45,18 @@
       border-radius: 12px;
       box-shadow: 0 16px 40px rgba(0,0,0,0.35);
     }
+
+    /* Accessibility: ensure text over image has contrast if any text placed here */
+    .promo-section .promo-frame-wrapper p,
+    .promo-section .promo-frame-wrapper h3 {
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    @media (max-width: 600px) {
+      .promo-section::before { opacity: 0.35; }
+      .frame-inner img { max-width: 95%; }
+    }
   </style>
 </head>
 <body>
