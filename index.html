@@ -4,8 +4,60 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ThoughtfulGifts | Meaningful Birthday & Anniversary Gifting 0.4</title>
-  
- 
+  <style>
+    .promo-section {
+      position: relative;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .promo-section::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url('shopg.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.42;
+      filter: blur(1.5px) saturate(1.1);
+      transform: scale(1.05);
+      z-index: 0;
+    }
+
+    .promo-frame-wrapper,
+    .creative-frame,
+    .frame-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .frame-inner img {
+      display: block;
+      max-width: 85%;
+      height: auto;
+      margin: 0 auto;
+      opacity: 0.9;
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+    }
+
+    /* Accessibility: ensure text over image has contrast if any text placed here */
+    .promo-section .promo-frame-wrapper p,
+    .promo-section .promo-frame-wrapper h3 {
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    @media (max-width: 600px) {
+      .promo-section::before { opacity: 0.35; }
+      .frame-inner img { max-width: 95%; }
+    }
+  </style>
 </head>
 <body>
 
@@ -20,6 +72,7 @@
       <nav class="nav-links">
         <a href="index.html" class="active">Home</a>
         <a href="form.html">Find a Gift</a>
+         <a href="local-shop.html">Local</a>
       </nav>
     </header>
 
@@ -71,6 +124,7 @@
         <div class="info-card">
           <h3>Gift Budget</h3>
           <p>Find gifts within your exact budget.</p>
+         
         </div>
       </section>
 
