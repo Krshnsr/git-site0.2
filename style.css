@@ -10,6 +10,8 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
+  -webkit-text-stroke-color: #38bdf8;
+
   
   --gradient-primary: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
   --gradient-accent: linear-gradient(135deg, #f59e0b, #ec4899);
