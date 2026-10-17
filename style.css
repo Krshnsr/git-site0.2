@@ -21,7 +21,7 @@
   --radius-md: 14px;
   --radius-lg: 20px;
 }
-<style>
+
   .promo-section {
     position: relative;
     min-height: 320px;
@@ -61,7 +61,6 @@
     border-radius: 12px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.35);
   }
-</style>
 * {
   box-sizing: border-box;
   margin: 0;
