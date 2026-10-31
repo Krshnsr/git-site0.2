@@ -33,7 +33,72 @@ const recommendationLimit = rateLimit({
 });
 
 app.post('/api/recommendations', recommendationLimit, async (request, response) => {
-  const provider = request.body?.provider || 'gemini';
+  const provider = request.body?.provider || 'local';
+  const { occasion, relationship, interests, avoid, maxBudget } = request.body || {};
+
+  const localFallback = () => {
+    const safeOccasion = typeof occasion === 'string' && occasion.trim() ? occasion.trim() : 'special occasion';
+    const safeRelationship = typeof relationship === 'string' && relationship.trim() ? relationship.trim() : 'loved one';
+    const safeInterests = typeof interests === 'string' && interests.trim() ? interests.trim() : 'personal interests';
+    const safeAvoid = typeof avoid === 'string' && avoid.trim() ? avoid.trim() : 'generic items';
+    const safeBudget = Number.isFinite(Number(maxBudget)) ? Number(maxBudget) : 5000;
+
+    const suggestions = [
+      {
+        title: `Personalized ${safeOccasion} keepsake`,
+        category: 'Personalized',
+        minPrice: Math.min(799, Math.max(399, Math.round(safeBudget * 0.18))),
+        maxPrice: Math.min(1499, Math.max(899, Math.round(safeBudget * 0.32))),
+        effortReason: `A custom keepsake feels personal and works well for ${safeRelationship} without being too generic.`,
+        searchQuery: `personalized ${safeOccasion} gift for ${safeRelationship}`
+      },
+      {
+        title: `Hobby-focused gift inspired by ${safeInterests}`,
+        category: 'Hobby',
+        minPrice: Math.min(999, Math.max(450, Math.round(safeBudget * 0.22))),
+        maxPrice: Math.min(1899, Math.max(980, Math.round(safeBudget * 0.38))),
+        effortReason: `This matches their interests and feels thoughtful while still being practical and easy to enjoy.`,
+        searchQuery: `${safeInterests} gift for ${safeRelationship}`
+      },
+      {
+        title: `Experience voucher for a relaxed outing`,
+        category: 'Experience',
+        minPrice: Math.min(1500, Math.max(700, Math.round(safeBudget * 0.25))),
+        maxPrice: Math.min(2500, Math.max(1400, Math.round(safeBudget * 0.45))),
+        effortReason: `An experience makes the gift memorable and gives them a special story to enjoy together.`,
+        searchQuery: `${safeOccasion} experience gift for ${safeRelationship}`
+      },
+      {
+        title: `Curated care package based on their preferences`,
+        category: 'Curated',
+        minPrice: Math.min(1200, Math.max(550, Math.round(safeBudget * 0.2))),
+        maxPrice: Math.min(2200, Math.max(1100, Math.round(safeBudget * 0.4))),
+        effortReason: `This balances useful and personal details while avoiding the kinds of items they usually dislike, like ${safeAvoid}.`,
+        searchQuery: `curated gift hamper for ${safeRelationship}`
+      },
+      {
+        title: `Useful premium item tailored to their routine`,
+        category: 'Practical',
+        minPrice: Math.min(1500, Math.max(600, Math.round(safeBudget * 0.28))),
+        maxPrice: Math.min(2600, Math.max(1300, Math.round(safeBudget * 0.5))),
+        effortReason: `A useful premium item feels intentional, easy to enjoy, and still special enough for the occasion.`,
+        searchQuery: `practical premium gift for ${safeRelationship}`
+      }
+    ].map((item) => ({
+      ...item,
+      price: `₹${item.minPrice.toLocaleString('en-IN')}–₹${item.maxPrice.toLocaleString('en-IN')}`,
+      buyUrl: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.searchQuery)}`,
+      platform: 'Local suggestions',
+      generatedBy: 'Local availability'
+    }));
+
+    return response.json({ suggestions });
+  };
+
+  if (provider === 'local') {
+    return localFallback();
+  }
+
   const providerSettings = new Map([
     ['gemini', {
       apiKey: process.env.GEMINI_API_KEY,
@@ -56,7 +121,6 @@ app.post('/api/recommendations', recommendationLimit, async (request, response) 
     return response.status(503).json({ error: `Configure ${providerSettings.keyName} on the server to use this provider.` });
   }
 
-  const { occasion, relationship, interests, avoid, maxBudget } = request.body || {};
   const textFields = [occasion, relationship, interests, avoid];
   if (
     textFields.some((value) => typeof value !== 'string' || value.trim().length === 0 || value.length > 500) ||

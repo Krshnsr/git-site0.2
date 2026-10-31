@@ -66,11 +66,14 @@
       <div class="form-group">
         <label for="ai-provider">AI recommendation provider</label>
         <select id="ai-provider">
+          <option value="local">Local available ideas (works without API key)</option>
           <option value="gemini">Google Gemini</option>
           <option value="openai">OpenAI (ChatGPT)</option>
         </select>
-        <small class="form-help">The selected service generates your gift ideas. Its API key must be configured on the server.</small>
+        <small class="form-help">Choose the local option when you want a working fallback without configuring an API key.</small>
       </div>
+
+      <div id="form-feedback" class="form-feedback" role="alert" hidden></div>
 
       <div class="form-group">
         <label for="interests">Interests, Passions & Quirks *</label>
