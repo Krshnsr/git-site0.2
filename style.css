@@ -80,12 +80,13 @@
 
     /* Navigation */
     .navbar {
-      position: relative;
+      position: sticky;
+      top: 0;
       z-index: 4;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 24px 0;
+      padding: 25 px 0;
     }
 
     .brand {
@@ -102,8 +103,8 @@
     .nav-links a {
       color: #94a3b8;
       text-decoration: none;
-      margin-left: 24px;
-      font-size: 0.95rem;
+      margin-left: 2px;
+      font-size: 1.2rem;
       transition: color 0.3s ease;
     }
 
@@ -183,7 +184,7 @@
     }
 
     .btn-outline {
-      background: transparent;
+      background: transparent 30%;
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #fff;
     }
@@ -447,8 +448,9 @@ body {
 
 .brand span {
   background: var(--gradient-primary);
+  background-clip: text;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent 45%;
 }
 
 .nav-links a {
@@ -508,7 +510,7 @@ body {
 }
 
 .btn-outline {
-  background: transparent;
+  background: transparent 15%;
   border: 1px solid var(--border-color);
   color: var(--text-main);
 }
@@ -552,7 +554,7 @@ body {
 .hero h1 span {
   background: var(--gradient-primary);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent 45%;
 }
 
 .hero p {
@@ -1119,11 +1121,12 @@ body::after {
 
 .nav-links a:hover::after,
 .nav-links a.active::after {
-  transform: scaleX(1);
+  transform: scaleX(2);
 }
 
 .hero {
   text-align: center;
+  color: #a8a6a6;
   padding: 80px 0 60px 0;
   max-width: 800px;
   margin: 0 auto;
@@ -1180,7 +1183,7 @@ body::after {
   text-decoration: none;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: 1px solid transparent 10%;
   letter-spacing: 0.01em;
 }
 
@@ -1199,8 +1202,8 @@ body::after {
 }
 
 .btn-outline {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent 40%;
+  border: 1px solid rgba(238, 235, 235, 0.815);
   color: #fff;
 }
 
@@ -1245,7 +1248,7 @@ body::after {
 .lookup-text h3 {
   font-size: 1.35rem;
   margin-bottom: 8px;
-  color: #fff;
+  color: #8d6ffb;
 }
 
 .lookup-text p {
@@ -1254,6 +1257,7 @@ body::after {
 }
 
 .lookup-form {
+   color: #584df7;
   display: flex;
   gap: 12px;
   flex-shrink: 0;
@@ -1542,7 +1546,7 @@ body::after {
 .hero h1 span {
   background: var(--gradient-primary);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent 50%;
 }
 
 .hero p {
