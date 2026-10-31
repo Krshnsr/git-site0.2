@@ -58,6 +58,7 @@ async function handleFormSubmission(event) {
             aiProvider,
             suggestions: aiResult.suggestions
         };
+        // --- SAFE & ERROR-PROOF FETCH CALL ---
         const response = await fetch(SHEET_WEB_APP_URL, {
             method: 'POST',
             mode: 'cors',
@@ -70,10 +71,24 @@ async function handleFormSubmission(event) {
                 data: submissionData
             })
         });
-        const result = await response.json();
-        if (!response.ok || (result.status && result.status !== 'success')) {
-            throw new Error(result.message || 'Could not save');
+
+        // 1. पहले रिस्पांस को टेक्स्ट के रूप में लो (ताकि HTML आने पर ऐप क्रैश न हो)
+        const responseText = await response.text();
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            // अगर सर्वर ने HTML या कुछ और भेज दिया है, तो यहाँ पकड़ में आ जाएगा
+            console.error('Server returned non-JSON response:', responseText);
+            throw new Error('Server returned an invalid response (HTML/Error page instead of JSON). Check Apps Script deployment URL or permissions.');
         }
+
+        // 2. अब चेक करो कि स्टेटस सक्सेस है या नहीं
+        if (!response.ok || (result.status && result.status !== 'success')) {
+            throw new Error(result.message || 'Could not save data to Google Sheets.');
+        }
+
         window.location.href = `results.html?code=${code}`;
     }
     catch (error) {
