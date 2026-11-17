@@ -218,14 +218,14 @@
 
     function movePlayer(event) {
       const rect = arena.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const x = event.clientX - rect.left - arena.clientLeft;
+      const y = event.clientY - rect.top - arena.clientTop;
 
       player.x = clamp(x, playerSize / 2, arena.clientWidth - playerSize / 2);
       player.y = clamp(y, playerSize / 2, arena.clientHeight - playerSize / 2);
       draw();
 
-      // The player loses as soon as any edge of the square touches the arena wall.
+      // End the game when any edge of the player square touches the arena wall.
       if (running && (
         player.x <= playerSize / 2 ||
         player.x >= arena.clientWidth - playerSize / 2 ||
@@ -237,6 +237,8 @@
     }
 
     arena.addEventListener('pointerdown', event => {
+      // Do not cancel the start/replay button's pointer event; it needs to produce a click.
+      if (!running) return;
       event.preventDefault();
       activePointerId = event.pointerId;
       arena.setPointerCapture?.(event.pointerId);
@@ -244,7 +246,7 @@
     });
 
     arena.addEventListener('pointermove', event => {
-      if (event.pointerType === 'mouse' || event.pointerId === activePointerId) {
+      if (running && (event.pointerType === 'mouse' || event.pointerId === activePointerId)) {
         movePlayer(event);
       }
     });
