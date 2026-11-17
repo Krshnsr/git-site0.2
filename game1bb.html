@@ -26,7 +26,7 @@
         }
 
         canvas {
-            width: min(800px, calc(100vw - 16px), calc((100svh - 44px) * 4 / 3));
+            width: min(800px, calc(100vw - 16px), calc((100svh - 90px) * 4 / 3));
             height: auto;
             background-color: #111;
             border: 4px solid #333;
@@ -41,19 +41,44 @@
             font-size: 14px;
             text-align: center;
         }
+
+        #retryButton {
+            border: 0;
+            border-radius: 6px;
+            padding: 11px 22px;
+            background: #00adb5;
+            color: #ffffff;
+            font: bold 16px sans-serif;
+            cursor: pointer;
+        }
+
+        #retryButton:hover,
+        #retryButton:focus-visible {
+            background: #08c5ce;
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
+        }
+
+        #retryButton[hidden] {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
 <canvas id="gameCanvas" width="800" height="600" tabindex="0" aria-label="Brick Breaker game"></canvas>
-<p id="controlsHelp">Move: mouse, touch, ← / →, or A / D · Restart: tap/click or press Enter</p>
+<p id="controlsHelp">Move: mouse, touch, ← / →, or A / D · Retry: button or Enter</p>
+<button id="retryButton" type="button" hidden>Retry Game</button>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const retryButton = document.getElementById("retryButton");
 
 // Game State
 let score = 0;
+let level = 1;
+const maxLevel = 5;
 let gameOver = false;
 let gameWon = false;
 const keys = { left: false, right: false };
@@ -78,7 +103,6 @@ const paddle = {
 };
 
 // Brick Grid Properties
-const brickRowCount = 5;
 const brickColumnCount = 9;
 const brickWidth = 75;
 const brickHeight = 20;
@@ -87,15 +111,41 @@ const brickOffsetTop = 50;
 const brickOffsetLeft = 35;
 
 // Brick Colors by Row (Top to Bottom)
-const rowColors = ["#ff2e63", "#ff6b6b", "#feca57", "#1dd1a1", "#54a0ff"];
+const rowColors = ["#ff2e63", "#ff6b6b", "#feca57", "#1dd1a1", "#54a0ff", "#a55eea", "#26de81", "#45aaf2"];
 
-// Initialize Bricks Matrix
+// Build a fresh brick layout. Each new level adds a row, up to eight rows.
 const bricks = [];
-for (let c = 0; c < brickColumnCount; c++) {
-    bricks[c] = [];
-    for (let r = 0; r < brickRowCount; r++) {
-        bricks[c][r] = { x: 0, y: 0, status: 1, color: rowColors[r] };
+function createBricks() {
+    const rowCount = Math.min(4 + level, rowColors.length);
+    bricks.length = 0;
+
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (let r = 0; r < rowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1, color: rowColors[r] };
+        }
     }
+}
+
+function resetBallForLevel() {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height - 50;
+    ball.speed = 6 + (level - 1) * 0.5;
+    const startingVelocity = 4 + (level - 1) * 0.4;
+    ball.dx = startingVelocity;
+    ball.dy = -startingVelocity;
+    paddle.x = (canvas.width - paddle.width) / 2;
+}
+
+function startNextLevel() {
+    if (level >= maxLevel) {
+        gameWon = true;
+        return;
+    }
+
+    level++;
+    createBricks();
+    resetBallForLevel();
 }
 
 // Convert screen coordinates to the canvas's 800x600 game coordinates.
@@ -144,57 +194,46 @@ document.addEventListener("keyup", (e) => {
 });
 
 function restartGame() {
-    if (gameOver || gameWon) {
-        // Reset ball
-        ball.x = canvas.width / 2;
-        ball.y = canvas.height - 50;
-        ball.dx = 4;
-        ball.dy = -4;
+    if (!gameOver && !gameWon) return;
 
-        // Reset paddle
-        paddle.x = (canvas.width - paddle.width) / 2;
-
-        // Reset bricks
-        for (let c = 0; c < brickColumnCount; c++) {
-            for (let r = 0; r < brickRowCount; r++) {
-                bricks[c][r].status = 1;
-            }
-        }
-
-        // Reset state
-        score = 0;
-        gameOver = false;
-        gameWon = false;
-        requestAnimationFrame(draw);
-    }
+    score = 0;
+    level = 1;
+    gameOver = false;
+    gameWon = false;
+    keys.left = false;
+    keys.right = false;
+    createBricks();
+    resetBallForLevel();
+    retryButton.hidden = true;
+    requestAnimationFrame(draw);
 }
+
+retryButton.addEventListener("click", restartGame);
 
 // Collision Detection: Ball vs Bricks
 function collisionDetection() {
-    let activeBricks = 0;
     for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
+        for (let r = 0; r < bricks[c].length; r++) {
             const b = bricks[c][r];
-            if (b.status === 1) {
-                activeBricks++;
-                // Check if ball bounding box overlaps with brick bounding box
-                if (ball.x + ball.radius > b.x &&
-                    ball.x - ball.radius < b.x + brickWidth &&
-                    ball.y + ball.radius > b.y &&
-                    ball.y - ball.radius < b.y + brickHeight) {
-
-                    ball.dy = -ball.dy; // Reverse vertical direction
-                    b.status = 0;       // Destroy brick
-                    score += 10;
-                }
+            if (b.status === 1 &&
+                ball.x + ball.radius > b.x &&
+                ball.x - ball.radius < b.x + brickWidth &&
+                ball.y + ball.radius > b.y &&
+                ball.y - ball.radius < b.y + brickHeight) {
+                ball.dy = -ball.dy;
+                b.status = 0;
+                score += 10;
+                break;
             }
         }
     }
 
-    // Win condition: No active bricks left
-    if (activeBricks === 0 && !gameOver) {
-        gameWon = true;
-    }
+    const remainingBricks = bricks.reduce(
+        (total, column) => total + column.filter((brick) => brick.status === 1).length,
+        0
+    );
+
+    if (remainingBricks === 0) startNextLevel();
 }
 
 // Drawing Functions
@@ -216,16 +255,17 @@ function drawPaddle() {
 
 function drawBricks() {
     for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-            if (bricks[c][r].status === 1) {
+        for (let r = 0; r < bricks[c].length; r++) {
+            const brick = bricks[c][r];
+            if (brick.status === 1) {
                 const brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
                 const brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
-                bricks[c][r].x = brickX;
-                bricks[c][r].y = brickY;
+                brick.x = brickX;
+                brick.y = brickY;
 
                 ctx.beginPath();
                 ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = bricks[c][r].color;
+                ctx.fillStyle = brick.color;
                 ctx.fill();
                 ctx.closePath();
             }
@@ -236,7 +276,11 @@ function drawBricks() {
 function drawScore() {
     ctx.font = "16px sans-serif";
     ctx.fillStyle = "#eeeeee";
+    ctx.textAlign = "left";
     ctx.fillText("Score: " + score, 20, 30);
+    ctx.textAlign = "right";
+    ctx.fillText("Level: " + level + " / " + maxLevel, canvas.width - 20, 30);
+    ctx.textAlign = "start";
 }
 
 function drawScreenMessage(title, subtitle) {
@@ -256,10 +300,9 @@ function drawScreenMessage(title, subtitle) {
 
 // Main Game Loop
 function draw() {
-    // Clear the canvas for the next frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Keyboard controls: move the paddle at a consistent speed per frame.
+    // Keyboard controls
     if (keys.left) paddle.x -= 7;
     if (keys.right) paddle.x += 7;
     paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, paddle.x));
@@ -268,16 +311,25 @@ function draw() {
     drawBall();
     drawPaddle();
     drawScore();
-    collisionDetection();
 
     if (gameOver) {
-        drawScreenMessage("GAME OVER", "Tap/click or press Enter to try again");
-        return; // Break the animation loop
+        drawScreenMessage("GAME OVER", "Use the Retry Game button below");
+        retryButton.hidden = false;
+        return;
     }
 
     if (gameWon) {
-        drawScreenMessage("YOU WIN!", "Tap/click or press Enter to play again");
-        return; // Break the animation loop
+        drawScreenMessage("YOU WIN!", "You completed all levels!");
+        retryButton.hidden = false;
+        return;
+    }
+
+    collisionDetection();
+
+    if (gameWon) {
+        drawScreenMessage("YOU WIN!", "You completed all levels!");
+        retryButton.hidden = false;
+        return;
     }
 
     // Wall Collision Detection (Left / Right)
@@ -291,22 +343,19 @@ function draw() {
     }
     // Bottom collision handling (Paddle or Floor)
     else if (ball.y + ball.dy > canvas.height - ball.radius) {
-        // Check if ball hits the paddle surface
         if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
-            // Calculate relative hit position to apply directional angle spin
-            let hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+            const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
             ball.dx = hitPoint * ball.speed;
-            ball.dy = -ball.dy;
-
-            // Push ball slightly out of the paddle to avoid multi-collision glitching
+            ball.dy = -Math.abs(ball.dy);
             ball.y = paddle.y - ball.radius;
         } else {
-            // Ball missed the paddle
             gameOver = true;
+            drawScreenMessage("GAME OVER", "Use the Retry Game button below");
+            retryButton.hidden = false;
+            return;
         }
     }
 
-    // Move the ball
     ball.x += ball.dx;
     ball.y += ball.dy;
 
@@ -314,6 +363,8 @@ function draw() {
 }
 
 // Start the game loop automatically on load
+createBricks();
+resetBallForLevel();
 draw();
 </script>
 
