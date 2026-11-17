@@ -1,294 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Square Survival</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    background: #171717;
-    color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    touch-action: none;
-  }
-  h2 { margin: 0; font-size: 22px; }
-  #stats {
-    display: flex;
-    justify-content: space-between;
-    width: min(400px, 92vw);
-    color: #d4d4d4;
-    font-size: 14px;
-  }
-  #arena {
-    width: min(400px, 92vw);
-    height: min(400px, 60vh, 60svh);
-    min-height: 240px;
-    border: 2px solid #a3a3a3;
-    background: #262626;
-    position: relative;
-    overflow: hidden;
-    cursor: crosshair;
-    touch-action: none;
-  }
-  .rect, #player { position: absolute; }
-  #player {
-    width: 10px;
-    height: 10px;
-    background: white;
-    z-index: 5;
-    box-shadow: 0 0 8px white;
-    pointer-events: none;
-  }
-  .rect { background: #ef4444; pointer-events: none; }
-  #r2 { background: #f59e0b; }
-  #r3 { background: #22c55e; }
-  #r4 { background: #a78bfa; }
-  #overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    background: #000b;
-    text-align: center;
-    padding: 20px;
-  }
-  #overlay p { margin: 0; line-height: 1.5; }
-  button {
-    border: 0;
-    padding: 10px 20px;
-    background: white;
-    color: #171717;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
-  }
-  button:focus-visible { outline: 3px solid #22c55e; outline-offset: 3px; }
-  .hint { color: #a3a3a3; font-size: 12px; text-align: center; padding: 0 12px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Square Survival</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #171717;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    h2 { margin: 0; font-size: 22px; }
+
+    #stats {
+      display: flex;
+      justify-content: space-between;
+      width: min(420px, 92vw);
+      color: #d4d4d4;
+      font-size: 14px;
+      gap: 12px;
+    }
+
+    #arena {
+      width: min(420px, 92vw);
+      height: min(420px, 60vh, 60svh);
+      min-height: 240px;
+      border: 2px solid #a3a3a3;
+      background: #262626;
+      position: relative;
+      overflow: hidden;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .rect, #player {
+      position: absolute;
+    }
+
+    #player {
+      width: 10px;
+      height: 10px;
+      background: white;
+      z-index: 5;
+      box-shadow: 0 0 8px white;
+      pointer-events: none;
+    }
+
+    .rect {
+      background: #ef4444;
+      pointer-events: none;
+    }
+
+    #r2 { background: #f59e0b; }
+    #r3 { background: #22c55e; }
+    #r4 { background: #a78bfa; }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.7);
+      text-align: center;
+      padding: 20px;
+    }
+
+    #overlay p {
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    button {
+      border: 0;
+      padding: 10px 20px;
+      background: white;
+      color: #171717;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .hint {
+      color: #a3a3a3;
+      font-size: 12px;
+      text-align: center;
+      padding: 0 12px;
+    }
+  </style>
 </head>
 <body>
-<h2>Square Survival</h2>
-<div id="stats">
-  <span>Time: <b id="time">0.00</b>s</span>
-  <span>Level: <b id="level">1</b></span>
-  <span>Best: <b id="best">0.00</b>s</span>
-</div>
-<div id="arena">
-  <div id="player"></div>
-  <div class="rect" id="r1"></div>
-  <div class="rect" id="r2"></div>
-  <div class="rect" id="r3"></div>
-  <div class="rect" id="r4"></div>
-  <div id="overlay">
-    <h2 id="message">Ready?</h2>
-    <p id="description">Avoid all four rectangles.<br>Survive as long as you can!</p>
-    <button id="start" type="button">Start Game</button>
+  <h2>Square Survival</h2>
+
+  <div id="stats">
+    <span>Time: <b id="time">0.00</b>s</span>
+    <span>Level: <b id="level">1</b></span>
+    <span>Best: <b id="best">0.00</b>s</span>
   </div>
-</div>
-<div class="hint">Move by dragging/touching inside the arena, or use your mouse.</div>
-<script>
-const arena = document.getElementById('arena');
-const playerEl = document.getElementById('player');
-const overlay = document.getElementById('overlay');
-const timeEl = document.getElementById('time');
-const levelEl = document.getElementById('level');
-const bestEl = document.getElementById('best');
-const startBtn = document.getElementById('start');
 
-const playerSize = 10;
-const CHANGE_AFTER = 10; // Difficulty increases every 10 seconds.
-const SPEED_MULTIPLIER = 1.15;
-const obstacles = [
-  { el: document.getElementById('r1'), w: 55, h: 12, x: 0, y: 0, vx: 125, vy: 105 },
-  { el: document.getElementById('r2'), w: 12, h: 65, x: 0, y: 0, vx: -110, vy: 135 },
-  { el: document.getElementById('r3'), w: 42, h: 18, x: 0, y: 0, vx: 145, vy: -115 },
-  { el: document.getElementById('r4'), w: 18, h: 48, x: 0, y: 0, vx: -130, vy: -125 }
-].map(obstacle => ({ ...obstacle, baseSpeed: Math.hypot(obstacle.vx, obstacle.vy) }));
+  <div id="arena">
+    <div id="player"></div>
+    <div class="rect" id="r1"></div>
+    <div class="rect" id="r2"></div>
+    <div class="rect" id="r3"></div>
+    <div class="rect" id="r4"></div>
 
-let player = { x: 200, y: 200 };
-let running = false;
-let startTime = 0;
-let lastFrame = 0;
-let elapsed = 0;
-let best = 0;
-let difficultyLevel = 0;
-let animationId = 0;
-let activePointerId = null;
+    <div id="overlay">
+      <h2 id="message">Ready?</h2>
+      <p id="description">Avoid all four rectangles.<br>Survive as long as you can!</p>
+      <button id="start" type="button">Start Game</button>
+    </div>
+  </div>
 
-try {
-  best = Number(localStorage.getItem('squareSurvivalBest')) || 0;
-} catch (_) {
-  best = 0;
-}
-bestEl.textContent = best.toFixed(2);
+  <div class="hint">Move by dragging or touching inside the arena.</div>
 
-function place(el, x, y, w, h) {
-  el.style.width = `${w}px`;
-  el.style.height = `${h}px`;
-  el.style.left = `${x}px`;
-  el.style.top = `${y}px`;
-}
+  <script>
+    const arena = document.getElementById("arena");
+    const playerEl = document.getElementById("player");
+    const overlay = document.getElementById("overlay");
+    const timeEl = document.getElementById("time");
+    const levelEl = document.getElementById("level");
+    const bestEl = document.getElementById("best");
+    const startBtn = document.getElementById("start");
 
-function resetGame() {
-  const w = arena.clientWidth;
-  const h = arena.clientHeight;
-  player.x = w / 2;
-  player.y = h / 2;
-  difficultyLevel = 0;
+    const playerSize = 10;
+    const CHANGE_AFTER = 10;
+    const SPEED_MULTIPLIER = 1.15;
 
-  const starts = [
-    [0, 0],
-    [w - obstacles[1].w, 0],
-    [0, h - obstacles[2].h],
-    [w - obstacles[3].w, h - obstacles[3].h]
-  ];
+    let player = { x: 200, y: 200 };
+    let running = false;
+    let startTime = 0;
+    let lastFrame = 0;
+    let elapsed = 0;
+    let best = 0;
+    let difficultyLevel = 0;
+    let animationId = 0;
+    let activePointerId = null;
 
-  obstacles.forEach((o, index) => {
-    [o.x, o.y] = starts[index];
-    const centerX = o.x + o.w / 2;
-    const centerY = o.y + o.h / 2;
-    const dx = w / 2 - centerX;
-    const dy = h / 2 - centerY;
-    const length = Math.hypot(dx, dy) || 1;
-    o.vx = dx / length * o.baseSpeed;
-    o.vy = dy / length * o.baseSpeed;
-  });
-  draw();
-}
+    const obstacles = [
+      { el: document.getElementById("r1"), w: 55, h: 12, x: 0, y: 0, vx: 125, vy: 105 },
+      { el: document.getElementById("r2"), w: 12, h: 65, x: 0, y: 0, vx: -110, vy: 135 },
+      { el: document.getElementById("r3"), w: 42, h: 18, x: 0, y: 0, vx: 145, vy: -115 },
+      { el: document.getElementById("r4"), w: 18, h: 48, x: 0, y: 0, vx: -130, vy: -125 }
+    ].map(o => ({ ...o, baseSpeed: Math.hypot(o.vx, o.vy) }));
 
-function draw() {
-  place(playerEl, player.x - playerSize / 2, player.y - playerSize / 2, playerSize, playerSize);
-  obstacles.forEach(o => place(o.el, o.x, o.y, o.w, o.h));
-}
-
-function movePlayer(event) {
-  const rect = arena.getBoundingClientRect();
-  player.x = Math.max(playerSize / 2, Math.min(arena.clientWidth - playerSize / 2, event.clientX - rect.left));
-  player.y = Math.max(playerSize / 2, Math.min(arena.clientHeight - playerSize / 2, event.clientY - rect.top));
-  draw();
-}
-
-arena.addEventListener('pointerdown', event => {
-  if (event.target === startBtn) return;
-  event.preventDefault();
-  activePointerId = event.pointerId;
-  arena.setPointerCapture?.(event.pointerId);
-  movePlayer(event);
-});
-
-arena.addEventListener('pointermove', event => {
-  if (event.pointerType === 'mouse' || event.pointerId === activePointerId) {
-    movePlayer(event);
-  }
-});
-
-function releasePointer(event) {
-  if (event.pointerId === activePointerId) activePointerId = null;
-}
-arena.addEventListener('pointerup', releasePointer);
-arena.addEventListener('pointercancel', releasePointer);
-
-function collides(o) {
-  const px = player.x - playerSize / 2;
-  const py = player.y - playerSize / 2;
-  return px < o.x + o.w && px + playerSize > o.x && py < o.y + o.h && py + playerSize > o.y;
-}
-
-function endGame() {
-  if (!running) return;
-  running = false;
-  cancelAnimationFrame(animationId);
-  best = Math.max(best, elapsed);
-  bestEl.textContent = best.toFixed(2);
-  try { localStorage.setItem('squareSurvivalBest', best.toFixed(2)); } catch (_) {}
-  document.getElementById('message').textContent = 'Game Over!';
-  document.getElementById('description').innerHTML = `You survived for <b>${elapsed.toFixed(2)} seconds</b>.<br>Try to beat your best time!`;
-  startBtn.textContent = 'Play Again';
-  overlay.style.display = 'flex';
-}
-
-function loop(now) {
-  if (!running) return;
-  const dt = Math.min((now - lastFrame) / 1000, 0.04);
-  lastFrame = now;
-  elapsed = (now - startTime) / 1000;
-  timeEl.textContent = elapsed.toFixed(2);
-
-  // Apply a modest speed increase once per 10-second level.
-  const newDifficultyLevel = Math.floor(elapsed / CHANGE_AFTER);
-  if (newDifficultyLevel > difficultyLevel) {
-    const speedScale = Math.pow(SPEED_MULTIPLIER, newDifficultyLevel - difficultyLevel);
-    difficultyLevel = newDifficultyLevel;
-    levelEl.textContent = difficultyLevel + 1;
-    obstacles.forEach(o => {
-      o.vx *= speedScale;
-      o.vy *= speedScale;
-    });
-  }
-
-  const w = arena.clientWidth;
-  const h = arena.clientHeight;
-  for (const o of obstacles) {
-    o.x += o.vx * dt;
-    o.y += o.vy * dt;
-
-    if (o.x <= 0) { o.x = 0; o.vx = Math.abs(o.vx); }
-    else if (o.x + o.w >= w) { o.x = w - o.w; o.vx = -Math.abs(o.vx); }
-
-    if (o.y <= 0) { o.y = 0; o.vy = Math.abs(o.vy); }
-    else if (o.y + o.h >= h) { o.y = h - o.h; o.vy = -Math.abs(o.vy); }
-
-    if (collides(o)) {
-      draw();
-      endGame();
-      return;
+    try {
+      best = Number(localStorage.getItem("squareSurvivalBest")) || 0;
+    } catch (_) {
+      best = 0;
     }
-  }
+    bestEl.textContent = best.toFixed(2);
 
-  draw();
-  animationId = requestAnimationFrame(loop);
-}
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
 
-function startGame() {
-  cancelAnimationFrame(animationId);
-  running = false;
-  resetGame();
-  elapsed = 0;
-  timeEl.textContent = '0.00';
-  levelEl.textContent = '1';
-  document.getElementById('message').textContent = 'Ready?';
-  document.getElementById('description').innerHTML = 'Avoid all four rectangles.<br>Survive as long as you can!';
-  overlay.style.display = 'none';
-  running = true;
-  startTime = performance.now();
-  lastFrame = startTime;
-  animationId = requestAnimationFrame(loop);
-}
+    function place(el, x, y, w, h) {
+      el.style.width = `${w}px`;
+      el.style.height = `${h}px`;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    }
 
-startBtn.addEventListener('click', startGame);
-window.addEventListener('resize', () => {
-  resetGame();
-  if (running) {
-    lastFrame = performance.now();
-  }
-});
+    function draw() {
+      place(playerEl, player.x - playerSize / 2, player.y - playerSize / 2, playerSize, playerSize);
+      obstacles.forEach(o => place(o.el, o.x, o.y, o.w, o.h));
+    }
 
-resetGame();
-</script>
+    function resetGame() {
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
+
+      player.x = w / 2;
+      player.y = h / 2;
+      difficultyLevel = 0;
+      levelEl.textContent = '1';
+
+      const starts = [
+        [0, 0],
+        [w - obstacles[1].w, 0],
+        [0, h - obstacles[2].h],
+        [w - obstacles[3].w, h - obstacles[3].h]
+      ];
+
+      obstacles.forEach((o, index) => {
+        o.x = starts[index][0];
+        o.y = starts[index][1];
+
+        const centerX = o.x + o.w / 2;
+        const centerY = o.y + o.h / 2;
+        const dx = w / 2 - centerX;
+        const dy = h / 2 - centerY;
+        const len = Math.hypot(dx, dy) || 1;
+        o.vx = (dx / len) * o.baseSpeed;
+        o.vy = (dy / len) * o.baseSpeed;
+      });
+
+      draw();
+    }
+
+    function movePlayer(event) {
+      const rect = arena.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      player.x = clamp(x, playerSize / 2, arena.clientWidth - playerSize / 2);
+      player.y = clamp(y, playerSize / 2, arena.clientHeight - playerSize / 2);
+      draw();
+    }
+
+    arena.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      arena.setPointerCapture?.(event.pointerId);
+      movePlayer(event);
+    });
+
+    arena.addEventListener('pointermove', event => {
+      if (event.pointerType === 'mouse' || event.pointerId === activePointerId) {
+        movePlayer(event);
+      }
+    });
+
+    arena.addEventListener('pointerup', event => {
+      if (event.pointerId === activePointerId) activePointerId = null;
+    });
+    arena.addEventListener('pointercancel', event => {
+      if (event.pointerId === activePointerId) activePointerId = null;
+    });
+
+    function collides(o) {
+      const px = player.x - playerSize / 2;
+      const py = player.y - playerSize / 2;
+      return px < o.x + o.w && px + playerSize > o.x && py < o.y + o.h && py + playerSize > o.y;
+    }
+
+    function endGame() {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(animationId);
+
+      elapsed = (performance.now() - startTime) / 1000;
+      best = Math.max(best, elapsed);
+      bestEl.textContent = best.toFixed(2);
+
+      try {
+        localStorage.setItem('squareSurvivalBest', best.toFixed(2));
+      } catch (_) {}
+
+      document.getElementById('message').textContent = 'Game Over!';
+      document.getElementById('description').innerHTML = `You survived for <b>${elapsed.toFixed(2)} seconds</b>.<br>Try to beat your best time!`;
+      startBtn.textContent = 'Play Again';
+      overlay.style.display = 'flex';
+    }
+
+    function loop(now) {
+      if (!running) return;
+
+      const dt = Math.min((now - lastFrame) / 1000, 0.04);
+      lastFrame = now;
+
+      elapsed = (now - startTime) / 1000;
+      timeEl.textContent = elapsed.toFixed(2);
+
+      const newDifficultyLevel = Math.floor(elapsed / CHANGE_AFTER);
+      if (newDifficultyLevel > difficultyLevel) {
+        const scale = Math.pow(SPEED_MULTIPLIER, newDifficultyLevel - difficultyLevel);
+        difficultyLevel = newDifficultyLevel;
+        levelEl.textContent = String(difficultyLevel + 1);
+
+        obstacles.forEach(o => {
+          o.vx *= scale;
+          o.vy *= scale;
+        });
+      }
+
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
+
+      for (const o of obstacles) {
+        o.x += o.vx * dt;
+        o.y += o.vy * dt;
+
+        if (o.x <= 0) {
+          o.x = 0;
+          o.vx = Math.abs(o.vx);
+        } else if (o.x + o.w >= w) {
+          o.x = w - o.w;
+          o.vx = -Math.abs(o.vx);
+        }
+
+        if (o.y <= 0) {
+          o.y = 0;
+          o.vy = Math.abs(o.vy);
+        } else if (o.y + o.h >= h) {
+          o.y = h - o.h;
+          o.vy = -Math.abs(o.vy);
+        }
+
+        if (collides(o)) {
+          draw();
+          endGame();
+          return;
+        }
+      }
+
+      draw();
+      animationId = requestAnimationFrame(loop);
+    }
+
+    function startGame() {
+      cancelAnimationFrame(animationId);
+      resetGame();
+      overlay.style.display = 'none';
+      running = true;
+      startTime = performance.now();
+      lastFrame = startTime;
+      elapsed = 0;
+      timeEl.textContent = '0.00';
+      difficultyLevel = 0;
+      levelEl.textContent = '1';
+      document.getElementById('message').textContent = 'Ready?';
+      document.getElementById('description').innerHTML = 'Avoid all four rectangles.<br>Survive as long as you can!';
+      startBtn.textContent = 'Start Game';
+      animationId = requestAnimationFrame(loop);
+    }
+
+    startBtn.addEventListener('click', startGame);
+
+    window.addEventListener('resize', () => {
+      resetGame();
+      if (running) {
+        lastFrame = performance.now();
+      }
+    });
+
+    resetGame();
+  </script>
 </body>
 </html>
