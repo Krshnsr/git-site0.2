@@ -1,161 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Game of Squires: Tactical Escape</title>
-    <style>
-        body { margin: 0; background: #1a1a1a; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
-        canvas { display: block; background: #222; cursor: crosshair; }
-        #ui { 
-            position: absolute; top: 20px; left: 20px; color: #0f0; 
-            pointer-events: none; text-transform: uppercase; letter-spacing: 2px;
-        }
-        .controls { position: absolute; bottom: 20px; left: 20px; color: #555; font-size: 12px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game of Squires: Tactical Escape</title>
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --panel: rgba(18, 18, 24, 0.82);
+      --panel-border: rgba(255,255,255,0.08);
+      --text: #edf6ff;
+      --muted: #9ec2d9;
+      --green: #46f0a9;
+      --red: #ff5d73;
+      --orange: #ffae42;
+      --purple: #d574ff;
+      --yellow: #ffe66d;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Courier New", Courier, monospace;
+      overflow: hidden;
+    }
+
+    body {
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at top, #1d2433 0%, #0f1116 42%, #090b10 100%);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    #ui {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      pointer-events: none;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      line-height: 1.6;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    #ui strong {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    #dashStatus {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .controls {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 10;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 7, 12, 0.70);
+      z-index: 20;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .panel {
+      width: min(420px, calc(100vw - 32px));
+      background: rgba(17, 20, 28, 0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      padding: 22px 20px 18px;
+      text-align: center;
+    }
+
+    .panel h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 42px);
+      color: var(--red);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #29d17f, #49d7ff);
+      color: #081018;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 12px 20px;
+      font-size: 16px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 10px 18px rgba(41, 209, 127, 0.28);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+  </style>
 </head>
 <body>
-    <div id="ui">
-        Score: <span id="score">0</span><br>
-        Dash: <span id="dashStatus">READY</span>
+  <div id="ui">
+    <div>Score: <strong id="score">0</strong></div>
+    <div>Level: <strong id="level">1</strong></div>
+    <div>Dash: <span id="dashStatus">READY</span></div>
+  </div>
+
+  <div class="controls">MOVE: MOUSE / TOUCH | DASH: SPACE / TAP</div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="gameOverlay" class="overlay" aria-live="polite">
+    <div class="panel">
+      <h1 id="overlayTitle">Caught!</h1>
+      <p id="overlayText">Final score: 0</p>
+      <button id="restartBtn">Retry</button>
     </div>
-    <div class="controls">MOVE: MOUSE | DASH: SPACEBAR</div>
-    <canvas id="gameCanvas"></canvas>
+  </div>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreEl = document.getElementById('score');
-const dashEl = document.getElementById('dashStatus');
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const levelEl = document.getElementById('level');
+    const dashEl = document.getElementById('dashStatus');
+    const overlay = document.getElementById('gameOverlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayText = document.getElementById('overlayText');
+    const restartBtn = document.getElementById('restartBtn');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let score = 0;
-let gameOver = false;
-let dashCooldown = 0;
-let isDashing = false;
-
-// Mouse Tracking
-const mouse = { x: canvas.width / 2, y: canvas.height / 2, radius: 8 };
-let lastX = mouse.x, lastY = mouse.y;
-let vX = 0, vY = 0;
-
-// Squire Configuration
-const squires = [
-    { x: 0, y: 0, color: '#ff4444', type: 'CHASER' },
-    { x: canvas.width, y: 0, color: '#ff8800', type: 'INTERCEPTOR' },
-    { x: 0, y: canvas.height, color: '#ff00ff', type: 'FLANKER_L' },
-    { x: canvas.width, y: canvas.height, color: '#ffff00', type: 'FLANKER_R' }
-];
-
-const BASE_SPEED = 2.8;
-const SQUIRE_RADIUS = 14;
-
-window.addEventListener('mousemove', (e) => {
-    vX = e.clientX - lastX;
-    vY = e.clientY - lastY;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    
-    if (!isDashing) {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    }
-});
-
-// Dash Mechanic
-window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && dashCooldown <= 0) {
-        isDashing = true;
-        dashCooldown = 100; // Frames until next dash
-        
-        // Instant thrust in current direction of travel
-        const angle = Math.atan2(vY, vX);
-        mouse.x += Math.cos(angle) * 150;
-        mouse.y += Math.sin(angle) * 150;
-        
-        setTimeout(() => { isDashing = false; }, 100);
-    }
-});
-
-function update() {
-    if (gameOver) return;
-
-    score++;
-    scoreEl.innerText = Math.floor(score / 10);
-    
-    if (dashCooldown > 0) {
-        dashCooldown--;
-        dashEl.innerText = "CHARGING...";
-        dashEl.style.color = "#f00";
-    } else {
-        dashEl.innerText = "READY";
-        dashEl.style.color = "#0f0";
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
     }
 
-    squires.forEach((s, i) => {
-        let tX = mouse.x;
-        let tY = mouse.y;
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      mouse.x = clamp(mouse.x, mouse.radius, canvas.width - mouse.radius);
+      mouse.y = clamp(mouse.y, mouse.radius, canvas.height - mouse.radius);
+    }
 
-        // Tactical AI Positioning
-        if (s.type === 'INTERCEPTOR') {
-            tX += vX * 20; // Aims way ahead
-            tY += vY * 20;
+    let score = 0;
+    let level = 1;
+    let gameOver = false;
+    let dashCooldown = 0;
+    let isDashing = false;
+
+    const mouse = {
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+      radius: 9
+    };
+
+    let lastPointerX = mouse.x;
+    let lastPointerY = mouse.y;
+    let vX = 0;
+    let vY = 0;
+    let pointerDown = false;
+
+    const BASE_SPEED = 2.8;
+    const SQUIRE_RADIUS = 14;
+
+    const squires = [
+      { x: 0, y: 0, color: '#ff4444', type: 'CHASER' },
+      { x: canvas.width, y: 0, color: '#ff8800', type: 'INTERCEPTOR' },
+      { x: 0, y: canvas.height, color: '#ff00ff', type: 'FLANKER_L' },
+      { x: canvas.width, y: canvas.height, color: '#ffff00', type: 'FLANKER_R' }
+    ];
+
+    function resetSquires() {
+      squires[0].x = 40; squires[0].y = 40;
+      squires[1].x = canvas.width - 40; squires[1].y = 60;
+      squires[2].x = 70; squires[2].y = canvas.height - 50;
+      squires[3].x = canvas.width - 70; squires[3].y = canvas.height - 60;
+    }
+
+    function updateHud() {
+      scoreEl.innerText = Math.floor(score);
+      levelEl.innerText = level;
+
+      if (dashCooldown > 0) {
+        dashEl.innerText = 'CHARGING...';
+        dashEl.style.color = '#ff5d73';
+      } else {
+        dashEl.innerText = 'READY';
+        dashEl.style.color = '#46f0a9';
+      }
+    }
+
+    function setPlayerPosition(x, y) {
+      mouse.x = clamp(x, mouse.radius, canvas.width - mouse.radius);
+      mouse.y = clamp(y, mouse.radius, canvas.height - mouse.radius);
+      vX = mouse.x - lastPointerX;
+      vY = mouse.y - lastPointerY;
+      lastPointerX = mouse.x;
+      lastPointerY = mouse.y;
+    }
+
+    function handlePointerMove(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+      if (!gameOver && (event.pointerType === 'mouse' || pointerDown)) {
+        setPlayerPosition(x, y);
+      }
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      pointerDown = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+      setPlayerPosition(x, y);
+      canvas.setPointerCapture?.(event.pointerId);
+
+      if (gameOver) return;
+      if (event.pointerType === 'touch') {
+        triggerDash();
+      }
+    });
+
+    canvas.addEventListener('pointermove', handlePointerMove);
+
+    canvas.addEventListener('pointerup', () => {
+      pointerDown = false;
+    });
+
+    canvas.addEventListener('pointerleave', () => {
+      pointerDown = false;
+    });
+
+    window.addEventListener('mousemove', (event) => {
+      if (gameOver) return;
+      const x = event.clientX;
+      const y = event.clientY;
+      if (event.pointerType === undefined || event.pointerType === 'mouse') {
+        setPlayerPosition(x, y);
+      }
+    });
+
+    function triggerDash() {
+      if (gameOver || dashCooldown > 0) return;
+
+      isDashing = true;
+      dashCooldown = 110;
+
+      const dirX = vX || 1;
+      const dirY = vY || 0;
+      const angle = Math.atan2(dirY, dirX);
+      const dashDistance = 170;
+
+      mouse.x += Math.cos(angle) * dashDistance;
+      mouse.y += Math.sin(angle) * dashDistance;
+      mouse.x = clamp(mouse.x, mouse.radius, canvas.width - mouse.radius);
+      mouse.y = clamp(mouse.y, mouse.radius, canvas.height - mouse.radius);
+
+      setTimeout(() => {
+        isDashing = false;
+      }, 130);
+    }
+
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        triggerDash();
+      }
+
+      if (key === 'arrowleft' || key === 'a') {
+        const nextX = mouse.x - 18;
+        setPlayerPosition(nextX, mouse.y);
+      }
+
+      if (key === 'arrowright' || key === 'd') {
+        const nextX = mouse.x + 18;
+        setPlayerPosition(nextX, mouse.y);
+      }
+
+      if (key === 'arrowup' || key === 'w') {
+        const nextY = mouse.y - 18;
+        setPlayerPosition(mouse.x, nextY);
+      }
+
+      if (key === 'arrowdown' || key === 's') {
+        const nextY = mouse.y + 18;
+        setPlayerPosition(mouse.x, nextY);
+      }
+
+      if ((event.key === 'Enter' || event.key === ' ') && gameOver) {
+        resetGame();
+      }
+    });
+
+    function endGame() {
+      gameOver = true;
+      overlayTitle.textContent = 'Caught!';
+      overlayText.textContent = `Final score: ${Math.floor(score)} | Level: ${level}`;
+      overlay.classList.add('show');
+    }
+
+    function resetGame() {
+      score = 0;
+      level = 1;
+      gameOver = false;
+      dashCooldown = 0;
+      isDashing = false;
+      pointerDown = false;
+      overlay.classList.remove('show');
+      mouse.x = canvas.width / 2;
+      mouse.y = canvas.height / 2;
+      lastPointerX = mouse.x;
+      lastPointerY = mouse.y;
+      vX = 0;
+      vY = 0;
+      resetSquires();
+      updateHud();
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      score += 1;
+      level = 1 + Math.floor(score / 300);
+      updateHud();
+
+      if (dashCooldown > 0) dashCooldown--;
+
+      squires.forEach((s) => {
+        let targetX = mouse.x;
+        let targetY = mouse.y;
+
+        if (s.type === 'CHASER') {
+          targetX = mouse.x;
+          targetY = mouse.y;
+        } else if (s.type === 'INTERCEPTOR') {
+          targetX = mouse.x + vX * 18;
+          targetY = mouse.y + vY * 18;
         } else if (s.type === 'FLANKER_L') {
-            tX += 150; tY -= 150;
+          targetX = mouse.x + 150;
+          targetY = mouse.y - 150;
         } else if (s.type === 'FLANKER_R') {
-            tX -= 150; tY += 150;
+          targetX = mouse.x - 150;
+          targetY = mouse.y + 150;
         }
 
-        const dx = tX - s.x;
-        const dy = tY - s.y;
-        const distToTarget = Math.sqrt(dx*dx + dy*dy);
+        const dx = targetX - s.x;
+        const dy = targetY - s.y;
+        const distance = Math.hypot(dx, dy);
+        const speed = BASE_SPEED + level * 0.55;
 
-        if (distToTarget > 0) {
-            s.x += (dx / distToTarget) * BASE_SPEED;
-            s.y += (dy / distToTarget) * BASE_SPEED;
+        if (distance > 0) {
+          s.x += (dx / distance) * speed;
+          s.y += (dy / distance) * speed;
         }
 
-        // Check Collision with Mouse
-        const distToMouse = Math.sqrt((mouse.x - s.x)**2 + (mouse.y - s.y)**2);
-        if (distToMouse < mouse.radius + SQUIRE_RADIUS) {
-            gameOver = true;
-            alert(`CAUGHT. Score: ${Math.floor(score/10)}\nTry harder next time.`);
-            location.reload();
+        s.x = clamp(s.x, 0, canvas.width);
+        s.y = clamp(s.y, 0, canvas.height);
+
+        const distToMouse = Math.hypot(mouse.x - s.x, mouse.y - s.y);
+        if (distToMouse < mouse.radius + SQUIRE_RADIUS + 2) {
+          endGame();
         }
-    });
-}
+      });
+    }
 
-function draw() {
-    ctx.fillStyle = 'rgba(34, 34, 34, 0.3)'; // Motion blur effect
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function drawPlayer() {
+      ctx.beginPath();
+      ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2);
+      ctx.fillStyle = isDashing ? '#ffffff' : '#46f0a9';
+      ctx.shadowColor = isDashing ? '#ffffff' : '#46f0a9';
+      ctx.shadowBlur = isDashing ? 16 : 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
 
-    // Draw Player
-    ctx.fillStyle = isDashing ? '#fff' : '#0f0';
-    ctx.beginPath();
-    ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI*2);
-    ctx.fill();
-
-    // Draw Squires
-    squires.forEach(s => {
+    function drawSquires() {
+      squires.forEach((s) => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, SQUIRE_RADIUS, 0, Math.PI * 2);
         ctx.fillStyle = s.color;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, SQUIRE_RADIUS, 0, Math.PI*2);
         ctx.fill();
-        
-        // Draw "Aura" to show their threat radius
+
+        ctx.setLineDash([5, 6]);
         ctx.strokeStyle = s.color;
-        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1.2;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, SQUIRE_RADIUS + 5, 0, Math.PI*2);
+        ctx.arc(s.x, s.y, SQUIRE_RADIUS + 7, 0, Math.PI * 2);
         ctx.stroke();
-    });
+        ctx.setLineDash([]);
+      });
+    }
 
-    update();
-    requestAnimationFrame(draw);
-}
+    function drawBackground() {
+      ctx.fillStyle = 'rgba(11, 11, 13, 0.27)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
-draw();
-</script>
+    function draw() {
+      drawBackground();
+      drawSquires();
+      drawPlayer();
+
+      if (!gameOver) {
+        update();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    restartBtn.addEventListener('click', resetGame);
+    window.addEventListener('resize', resizeCanvas);
+
+    resizeCanvas();
+    resetGame();
+    draw();
+  </script>
 </body>
 </html>
