@@ -159,7 +159,7 @@
       { el: document.getElementById("r2"), w: 12, h: 65, x: 0, y: 0, vx: -110, vy: 135 },
       { el: document.getElementById("r3"), w: 42, h: 18, x: 0, y: 0, vx: 145, vy: -115 },
       { el: document.getElementById("r4"), w: 18, h: 48, x: 0, y: 0, vx: -130, vy: -125 }
-    ].map(o => ({ ...o, baseSpeed: Math.hypot(o.vx, o.vy) }));
+    ].map(o => ({ ...o, baseSpeed: Math.hypot(o.vx, o.vy), cornerOffset: 0 }));
 
     try {
       best = Number(localStorage.getItem("squareSurvivalBest")) || 0;
@@ -203,6 +203,8 @@
       obstacles.forEach((o, index) => {
         o.x = starts[index][0];
         o.y = starts[index][1];
+        // Randomize which corner each block heads toward first on future level changes.
+        o.cornerOffset = Math.floor(Math.random() * 4);
 
         const centerX = o.x + o.w / 2;
         const centerY = o.y + o.h / 2;
@@ -214,6 +216,37 @@
       });
 
       draw();
+    }
+
+    function changeObstacleDirections(level) {
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
+      const corners = obstacles.map(o => [
+        [0, 0],
+        [w - o.w, 0],
+        [0, h - o.h],
+        [w - o.w, h - o.h]
+      ]);
+
+      obstacles.forEach((o, index) => {
+        // Cycle through all four corners for every block, with a randomized starting corner.
+        const cornerIndex = (level - 1 + o.cornerOffset + index) % 4;
+        const [targetX, targetY] = corners[index][cornerIndex];
+        const dx = targetX - o.x;
+        const dy = targetY - o.y;
+        const distance = Math.hypot(dx, dy);
+        const speed = o.baseSpeed * Math.pow(SPEED_MULTIPLIER, level);
+
+        if (distance > 0) {
+          o.vx = (dx / distance) * speed;
+          o.vy = (dy / distance) * speed;
+        } else {
+          // If already at the target, choose a new direction so the block keeps moving.
+          const angle = Math.random() * Math.PI * 2;
+          o.vx = Math.cos(angle) * speed;
+          o.vy = Math.sin(angle) * speed;
+        }
+      });
     }
 
     function movePlayer(event) {
@@ -294,14 +327,9 @@
 
       const newDifficultyLevel = Math.floor(elapsed / CHANGE_AFTER);
       if (newDifficultyLevel > difficultyLevel) {
-        const scale = Math.pow(SPEED_MULTIPLIER, newDifficultyLevel - difficultyLevel);
         difficultyLevel = newDifficultyLevel;
         levelEl.textContent = String(difficultyLevel + 1);
-
-        obstacles.forEach(o => {
-          o.vx *= scale;
-          o.vy *= scale;
-        });
+        changeObstacleDirections(difficultyLevel);
       }
 
       const w = arena.clientWidth;
