@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +6,10 @@
 <title>Square Survival</title>
 <style>
   * { box-sizing: border-box; }
-
   body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100svh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -20,10 +19,9 @@
     color: white;
     font-family: Arial, sans-serif;
     overflow: hidden;
+    touch-action: none;
   }
-
   h2 { margin: 0; font-size: 22px; }
-
   #stats {
     display: flex;
     justify-content: space-between;
@@ -31,36 +29,30 @@
     color: #d4d4d4;
     font-size: 14px;
   }
-#arena {
-  width: 400px;
-  height: 400px;
-  max-width: 92vw;
-  max-height: 60vh;
-  border: 2px solid #a3a3a3;
-  background: #262626;
-  position: relative;
-  overflow: hidden;
-  cursor: crosshair;
-  touch-action: none;
-}
-
-  .rect, #player {
-    position: absolute;
+  #arena {
+    width: min(400px, 92vw);
+    height: min(400px, 60vh, 60svh);
+    min-height: 240px;
+    border: 2px solid #a3a3a3;
+    background: #262626;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: none;
   }
-
+  .rect, #player { position: absolute; }
   #player {
     width: 10px;
     height: 10px;
     background: white;
     z-index: 5;
     box-shadow: 0 0 8px white;
+    pointer-events: none;
   }
-
-  .rect { background: #ef4444; }
+  .rect { background: #ef4444; pointer-events: none; }
   #r2 { background: #f59e0b; }
   #r3 { background: #22c55e; }
   #r4 { background: #a78bfa; }
-
   #overlay {
     position: absolute;
     inset: 0;
@@ -74,9 +66,7 @@
     text-align: center;
     padding: 20px;
   }
-
   #overlay p { margin: 0; line-height: 1.5; }
-
   button {
     border: 0;
     padding: 10px 20px;
@@ -85,56 +75,50 @@
     font-weight: bold;
     cursor: pointer;
     border-radius: 5px;
+    font-size: 16px;
   }
-
-  .hint {
-    color: #a3a3a3;
-    font-size: 12px;
-    text-align: center;
-  }
+  button:focus-visible { outline: 3px solid #22c55e; outline-offset: 3px; }
+  .hint { color: #a3a3a3; font-size: 12px; text-align: center; padding: 0 12px; }
 </style>
 </head>
 <body>
-
 <h2>Square Survival</h2>
-
 <div id="stats">
   <span>Time: <b id="time">0.00</b>s</span>
+  <span>Level: <b id="level">1</b></span>
   <span>Best: <b id="best">0.00</b>s</span>
 </div>
-
 <div id="arena">
   <div id="player"></div>
   <div class="rect" id="r1"></div>
   <div class="rect" id="r2"></div>
   <div class="rect" id="r3"></div>
   <div class="rect" id="r4"></div>
-
   <div id="overlay">
     <h2 id="message">Ready?</h2>
     <p id="description">Avoid all four rectangles.<br>Survive as long as you can!</p>
-    <button id="start">Start Game</button>
+    <button id="start" type="button">Start Game</button>
   </div>
 </div>
-
-<div class="hint">Move your mouse inside the arena to survive.</div>
-
+<div class="hint">Move by dragging/touching inside the arena, or use your mouse.</div>
 <script>
-const arena = document.getElementById("arena");
-const playerEl = document.getElementById("player");
-const overlay = document.getElementById("overlay");
-const timeEl = document.getElementById("time");
-const bestEl = document.getElementById("best");
-const startBtn = document.getElementById("start");
+const arena = document.getElementById('arena');
+const playerEl = document.getElementById('player');
+const overlay = document.getElementById('overlay');
+const timeEl = document.getElementById('time');
+const levelEl = document.getElementById('level');
+const bestEl = document.getElementById('best');
+const startBtn = document.getElementById('start');
 
 const playerSize = 10;
-
+const CHANGE_AFTER = 10; // Difficulty increases every 10 seconds.
+const SPEED_MULTIPLIER = 1.15;
 const obstacles = [
-  { el: document.getElementById("r1"), w: 55, h: 12, x: 0, y: 0, vx: 125, vy: 105 },
-  { el: document.getElementById("r2"), w: 12, h: 65, x: 0, y: 0, vx: -110, vy: 135 },
-  { el: document.getElementById("r3"), w: 42, h: 18, x: 0, y: 0, vx: 145, vy: -115 },
-  { el: document.getElementById("r4"), w: 18, h: 48, x: 0, y: 0, vx: -130, vy: -125 }
-];
+  { el: document.getElementById('r1'), w: 55, h: 12, x: 0, y: 0, vx: 125, vy: 105 },
+  { el: document.getElementById('r2'), w: 12, h: 65, x: 0, y: 0, vx: -110, vy: 135 },
+  { el: document.getElementById('r3'), w: 42, h: 18, x: 0, y: 0, vx: 145, vy: -115 },
+  { el: document.getElementById('r4'), w: 18, h: 48, x: 0, y: 0, vx: -130, vy: -125 }
+].map(obstacle => ({ ...obstacle, baseSpeed: Math.hypot(obstacle.vx, obstacle.vy) }));
 
 let player = { x: 200, y: 200 };
 let running = false;
@@ -142,140 +126,132 @@ let startTime = 0;
 let lastFrame = 0;
 let elapsed = 0;
 let best = 0;
-let animationId;
+let difficultyLevel = 0;
+let animationId = 0;
+let activePointerId = null;
+
+try {
+  best = Number(localStorage.getItem('squareSurvivalBest')) || 0;
+} catch (_) {
+  best = 0;
+}
+bestEl.textContent = best.toFixed(2);
 
 function place(el, x, y, w, h) {
-  el.style.width = w + "px";
-  el.style.height = h + "px";
-  el.style.left = x + "px";
-  el.style.top = y + "px";
+  el.style.width = `${w}px`;
+  el.style.height = `${h}px`;
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
 }
 
 function resetGame() {
   const w = arena.clientWidth;
   const h = arena.clientHeight;
-
   player.x = w / 2;
   player.y = h / 2;
+  difficultyLevel = 0;
 
-  // Each obstacle begins in a different corner.
-  obstacles[0].x = 0;
-  obstacles[0].y = 0;
+  const starts = [
+    [0, 0],
+    [w - obstacles[1].w, 0],
+    [0, h - obstacles[2].h],
+    [w - obstacles[3].w, h - obstacles[3].h]
+  ];
 
-  obstacles[1].x = w - obstacles[1].w;
-  obstacles[1].y = 0;
-
-  obstacles[2].x = 0;
-  obstacles[2].y = h - obstacles[2].h;
-
-  obstacles[3].x = w - obstacles[3].w;
-  obstacles[3].y = h - obstacles[3].h;
-
-  obstacles.forEach(o => {
-    // Aim diagonally toward the arena interior.
-    const cx = o.x + o.w / 2;
-    const cy = o.y + o.h / 2;
-    const dx = w / 2 - cx;
-    const dy = h / 2 - cy;
-    const speed = Math.hypot(o.vx, o.vy);
+  obstacles.forEach((o, index) => {
+    [o.x, o.y] = starts[index];
+    const centerX = o.x + o.w / 2;
+    const centerY = o.y + o.h / 2;
+    const dx = w / 2 - centerX;
+    const dy = h / 2 - centerY;
     const length = Math.hypot(dx, dy) || 1;
-    o.vx = dx / length * speed;
-    o.vy = dy / length * speed;
+    o.vx = dx / length * o.baseSpeed;
+    o.vy = dy / length * o.baseSpeed;
   });
-
   draw();
 }
 
 function draw() {
-  place(
-    playerEl,
-    player.x - playerSize / 2,
-    player.y - playerSize / 2,
-    playerSize,
-    playerSize
-  );
-
+  place(playerEl, player.x - playerSize / 2, player.y - playerSize / 2, playerSize, playerSize);
   obstacles.forEach(o => place(o.el, o.x, o.y, o.w, o.h));
 }
 
 function movePlayer(event) {
   const rect = arena.getBoundingClientRect();
-  player.x = Math.max(playerSize / 2,
-    Math.min(arena.clientWidth - playerSize / 2, event.clientX - rect.left));
-  player.y = Math.max(playerSize / 2,
-    Math.min(arena.clientHeight - playerSize / 2, event.clientY - rect.top));
+  player.x = Math.max(playerSize / 2, Math.min(arena.clientWidth - playerSize / 2, event.clientX - rect.left));
+  player.y = Math.max(playerSize / 2, Math.min(arena.clientHeight - playerSize / 2, event.clientY - rect.top));
   draw();
 }
 
-arena.addEventListener("pointermove", event => {
+arena.addEventListener('pointerdown', event => {
+  if (event.target === startBtn) return;
+  event.preventDefault();
+  activePointerId = event.pointerId;
+  arena.setPointerCapture?.(event.pointerId);
   movePlayer(event);
 });
+
+arena.addEventListener('pointermove', event => {
+  if (event.pointerType === 'mouse' || event.pointerId === activePointerId) {
+    movePlayer(event);
+  }
+});
+
+function releasePointer(event) {
+  if (event.pointerId === activePointerId) activePointerId = null;
+}
+arena.addEventListener('pointerup', releasePointer);
+arena.addEventListener('pointercancel', releasePointer);
 
 function collides(o) {
   const px = player.x - playerSize / 2;
   const py = player.y - playerSize / 2;
-
-  return px < o.x + o.w &&
-         px + playerSize > o.x &&
-         py < o.y + o.h &&
-         py + playerSize > o.y;
+  return px < o.x + o.w && px + playerSize > o.x && py < o.y + o.h && py + playerSize > o.y;
 }
 
 function endGame() {
+  if (!running) return;
   running = false;
   cancelAnimationFrame(animationId);
-
-  elapsed = (performance.now() - startTime) / 1000;
   best = Math.max(best, elapsed);
   bestEl.textContent = best.toFixed(2);
-
-  document.getElementById("message").textContent = "Game Over!";
-  document.getElementById("description").innerHTML =
-    `You survived for <b>${elapsed.toFixed(2)} seconds</b>.<br>Try to beat your best time!`;
-
-  startBtn.textContent = "Play Again";
-  overlay.style.display = "flex";
+  try { localStorage.setItem('squareSurvivalBest', best.toFixed(2)); } catch (_) {}
+  document.getElementById('message').textContent = 'Game Over!';
+  document.getElementById('description').innerHTML = `You survived for <b>${elapsed.toFixed(2)} seconds</b>.<br>Try to beat your best time!`;
+  startBtn.textContent = 'Play Again';
+  overlay.style.display = 'flex';
 }
 
 function loop(now) {
   if (!running) return;
-
   const dt = Math.min((now - lastFrame) / 1000, 0.04);
   lastFrame = now;
-
   elapsed = (now - startTime) / 1000;
   timeEl.textContent = elapsed.toFixed(2);
-// Difficulty settings
-const CHANGE_AFTER = 10; // Change every 10 seconds
-const SPEED_MULTIPLIER = 1.5;
-const SIZE_MULTIPLIER = 2;
 
-let difficultyLevel = 0;
-elapsed = (now - startTime) / 1000;
+  // Apply a modest speed increase once per 10-second level.
+  const newDifficultyLevel = Math.floor(elapsed / CHANGE_AFTER);
+  if (newDifficultyLevel > difficultyLevel) {
+    const speedScale = Math.pow(SPEED_MULTIPLIER, newDifficultyLevel - difficultyLevel);
+    difficultyLevel = newDifficultyLevel;
+    levelEl.textContent = difficultyLevel + 1;
+    obstacles.forEach(o => {
+      o.vx *= speedScale;
+      o.vy *= speedScale;
+    });
+  }
 
   const w = arena.clientWidth;
   const h = arena.clientHeight;
-
   for (const o of obstacles) {
     o.x += o.vx * dt;
     o.y += o.vy * dt;
 
-    // Bounce off all four arena walls.
-    if (o.x <= 0) {
-      o.x = 0;
-      o.vx = Math.abs(o.vx);
-    } else if (o.x + o.w >= w) {
-      o.x = w - o.w;
-      o.vx = -Math.abs(o.vx);
-    }
+    if (o.x <= 0) { o.x = 0; o.vx = Math.abs(o.vx); }
+    else if (o.x + o.w >= w) { o.x = w - o.w; o.vx = -Math.abs(o.vx); }
 
-    if (o.y <= 0) {
-      o.y = 0;
-      o.vy = Math.abs(o.vy);
-    } else if (o.y + o.h >= h) {
-      o.y = h - o.h;
-      o.vy = -Math.abs(o.vy);
-    }
+    if (o.y <= 0) { o.y = 0; o.vy = Math.abs(o.vy); }
+    else if (o.y + o.h >= h) { o.y = h - o.h; o.vy = -Math.abs(o.vy); }
 
     if (collides(o)) {
       draw();
@@ -290,36 +266,28 @@ elapsed = (now - startTime) / 1000;
 
 function startGame() {
   cancelAnimationFrame(animationId);
+  running = false;
   resetGame();
-
   elapsed = 0;
-  timeEl.textContent = "0.00";
-  overlay.style.display = "none";
-const newLevel = Math.floor(elapsed / CHANGE_AFTER);
-
-if (newLevel > difficultyLevel) {
-  const levelsToIncrease = newLevel - difficultyLevel;
-  difficultyLevel = newLevel;
-
-  obstacles.forEach(o => {
-    // Increase speed
-    o.vx *= Math.pow(SPEED_MULTIPLIER, levelsToIncrease);
-    o.vy *= Math.pow(SPEED_MULTIPLIER, levelsToIncrease);
-
-    // Double size at each difficulty increase
-    o.w *= Math.pow(SIZE_MULTIPLIER, levelsToIncrease);
-    o.h *= Math.pow(SIZE_MULTIPLIER, levelsToIncrease);
-  });
-}
+  timeEl.textContent = '0.00';
+  levelEl.textContent = '1';
+  document.getElementById('message').textContent = 'Ready?';
+  document.getElementById('description').innerHTML = 'Avoid all four rectangles.<br>Survive as long as you can!';
+  overlay.style.display = 'none';
   running = true;
   startTime = performance.now();
   lastFrame = startTime;
-
   animationId = requestAnimationFrame(loop);
 }
 
-startBtn.addEventListener("click", startGame);
-difficultyLevel = 0;
+startBtn.addEventListener('click', startGame);
+window.addEventListener('resize', () => {
+  resetGame();
+  if (running) {
+    lastFrame = performance.now();
+  }
+});
+
 resetGame();
 </script>
 </body>
