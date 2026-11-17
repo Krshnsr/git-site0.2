@@ -79,6 +79,7 @@
     const SPEED_MULTIPLIER = 1.15;
     const WAYPOINT_INTERVAL = 2.5;
     const IDLE_LIMIT = 1.5;
+    const MIN_VALID_BEST = 3;
 
     let player = { x: 200, y: 200 };
     let running = false;
@@ -97,10 +98,18 @@
       { el: document.getElementById("r2"), w: 12, h: 65, x: 0, y: 0, vx: -110, vy: 135 },
       { el: document.getElementById("r3"), w: 42, h: 18, x: 0, y: 0, vx: 145, vy: -115 },
       { el: document.getElementById("r4"), w: 18, h: 48, x: 0, y: 0, vx: -130, vy: -125 }
-    ].map(o => ({ ...o, baseSpeed: Math.hypot(o.vx, o.vy), route: [], routeIndex: 0, routeTimer: 0 }));
+    ].map((o, index) => ({
+      ...o,
+      baseSpeed: Math.hypot(o.vx, o.vy),
+      route: [],
+      routeIndex: 0,
+      routeTimer: 0,
+      chasesPlayer: index === 3
+    }));
 
     try {
-      best = Number(localStorage.getItem("squareSurvivalBest")) || 0;
+      const savedBest = Number(localStorage.getItem("squareSurvivalBest")) || 0;
+      best = savedBest >= MIN_VALID_BEST ? savedBest : 0;
     } catch (_) {
       best = 0;
     }
@@ -123,7 +132,6 @@
     }
 
     function makeRoute() {
-      // A shuffled 3-by-3 route reaches all four corners and sweeps the arena's interior.
       const points = Array.from({ length: 9 }, (_, i) => i);
       for (let i = points.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -160,6 +168,18 @@
       o.routeTimer = 0;
     }
 
+    function steerChaser(o) {
+      const dx = player.x - (o.x + o.w / 2);
+      const dy = player.y - (o.y + o.h / 2);
+      const distance = Math.hypot(dx, dy);
+      if (distance < 1) return;
+
+      const speedScale = Math.min(Math.pow(SPEED_MULTIPLIER, difficultyLevel), 3.5);
+      const speed = o.baseSpeed * speedScale;
+      o.vx = dx / distance * speed;
+      o.vy = dy / distance * speed;
+    }
+
     function resetGame() {
       const w = arena.clientWidth;
       const h = arena.clientHeight;
@@ -179,7 +199,9 @@
         o.route = makeRoute();
         o.routeIndex = Math.floor(Math.random() * o.route.length);
         o.routeTimer = 0;
-        aimAtNextWaypoint(o);
+        o.chasesPlayer = index === 3;
+        if (o.chasesPlayer) steerChaser(o);
+        else aimAtNextWaypoint(o);
       });
       draw();
     }
@@ -188,12 +210,19 @@
       if (!running) return;
       running = false;
       cancelAnimationFrame(animationId);
+
       elapsed = (performance.now() - startTime) / 1000;
-      best = Math.max(best, elapsed);
-      bestEl.textContent = best.toFixed(2);
-      try {
-        localStorage.setItem('squareSurvivalBest', best.toFixed(2));
-      } catch (_) {}
+
+      if (elapsed >= MIN_VALID_BEST) {
+        best = Math.max(best, elapsed);
+        bestEl.textContent = best.toFixed(2);
+        try {
+          localStorage.setItem('squareSurvivalBest', best.toFixed(2));
+        } catch (_) {}
+      } else {
+        bestEl.textContent = best.toFixed(2);
+      }
+
       document.getElementById('message').textContent = 'Game Over!';
       document.getElementById('description').innerHTML = `You survived for <b>${elapsed.toFixed(2)} seconds</b>.<br>Try to beat your best time!`;
       startBtn.textContent = 'Play Again';
@@ -208,7 +237,6 @@
       player.y = clamp(y, playerSize / 2, arena.clientHeight - playerSize / 2);
       draw();
 
-      // The player's square loses as soon as its edge touches the wall.
       if (running && (
         player.x <= playerSize / 2 ||
         player.x >= arena.clientWidth - playerSize / 2 ||
@@ -218,7 +246,6 @@
     }
 
     arena.addEventListener('pointerdown', event => {
-      // Let the overlay's Start/Play Again button receive its normal click.
       if (!running) return;
       event.preventDefault();
       activePointerId = event.pointerId;
@@ -251,7 +278,6 @@
       elapsed = (now - startTime) / 1000;
       timeEl.textContent = elapsed.toFixed(2);
 
-      // Require regular movement so the player cannot camp in one spot.
       if (Math.hypot(player.x - previousPlayerPosition.x, player.y - previousPlayerPosition.y) >= 2) {
         idleTime = 0;
         previousPlayerPosition = { x: player.x, y: player.y };
@@ -269,11 +295,17 @@
         levelEl.textContent = String(difficultyLevel + 1);
       }
 
+      obstacles[1].chasesPlayer = difficultyLevel >= 1;
+
       const w = arena.clientWidth;
       const h = arena.clientHeight;
       for (const o of obstacles) {
-        o.routeTimer += dt;
-        if (o.routeTimer >= WAYPOINT_INTERVAL) aimAtNextWaypoint(o);
+        if (o.chasesPlayer) {
+          steerChaser(o);
+        } else {
+          o.routeTimer += dt;
+          if (o.routeTimer >= WAYPOINT_INTERVAL) aimAtNextWaypoint(o);
+        }
 
         o.x += o.vx * dt;
         o.y += o.vy * dt;
@@ -317,7 +349,7 @@
       difficultyLevel = 0;
       levelEl.textContent = '1';
       document.getElementById('message').textContent = 'Ready?';
-      document.getElementById('description').innerHTML = 'Avoid all four rectangles and the walls.<br>Keep moving to survive!';
+      document.getElementById('description').innerHTML = 'Avoid the blocks and walls.<br>The purple block will chase you!';
       startBtn.textContent = 'Start Game';
       animationId = requestAnimationFrame(loop);
     }
