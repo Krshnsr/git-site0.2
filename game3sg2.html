@@ -124,7 +124,7 @@
 
     <div id="overlay">
       <h2 id="message">Ready?</h2>
-      <p id="description">Avoid all four rectangles.<br>Survive as long as you can!</p>
+      <p id="description">Avoid all four rectangles and the walls.<br>Survive as long as you can!</p>
       <button id="start" type="button">Start Game</button>
     </div>
   </div>
@@ -224,6 +224,16 @@
       player.x = clamp(x, playerSize / 2, arena.clientWidth - playerSize / 2);
       player.y = clamp(y, playerSize / 2, arena.clientHeight - playerSize / 2);
       draw();
+
+      // The player loses as soon as any edge of the square touches the arena wall.
+      if (running && (
+        player.x <= playerSize / 2 ||
+        player.x >= arena.clientWidth - playerSize / 2 ||
+        player.y <= playerSize / 2 ||
+        player.y >= arena.clientHeight - playerSize / 2
+      )) {
+        endGame();
+      }
     }
 
     arena.addEventListener('pointerdown', event => {
@@ -338,7 +348,7 @@
       difficultyLevel = 0;
       levelEl.textContent = '1';
       document.getElementById('message').textContent = 'Ready?';
-      document.getElementById('description').innerHTML = 'Avoid all four rectangles.<br>Survive as long as you can!';
+      document.getElementById('description').innerHTML = 'Avoid all four rectangles and the walls.<br>Survive as long as you can!';
       startBtn.textContent = 'Start Game';
       animationId = requestAnimationFrame(loop);
     }
